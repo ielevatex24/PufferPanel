@@ -39,7 +39,7 @@ func init() {
 
 type Setting struct {
 	Key   string `gorm:"type:varchar(100);primaryKey"`
-	Value string `gorm:"type:varchar(100)"`
+	Value string `gorm:"type:text"`
 }
 
 type db interface {
@@ -67,6 +67,7 @@ var defaultSettings = map[string]interface{}{
 	"panel.email.key":             "",
 	"panel.settings.companyName":  "PufferPanel",
 	"panel.settings.defaultTheme": "PufferPanel",
+	"panel.settings.themeSettings": "{}",
 	"panel.settings.masterUrl":    "http://localhost:8080",
 	"panel.sessionKey":            []uint8{},
 	"panel.registrationEnabled":   true,

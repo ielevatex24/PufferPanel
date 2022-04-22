@@ -1,0 +1,29 @@
+.dark {
+  --success: #4caf50;
+  --warning-bg: #855800;
+  --warning: #fbac00;
+  --error: #fe4242;
+  --backdrop: #292929;
+  --background: #333;
+  --text: rgba(255, 255, 255, 0.87);
+  --text-disabled: rgba(255, 255, 255, 0.5);
+  --servertype-icon-filter: brightness(0.625);
+  --ace-theme: monokai;
+  --apex-background-color: var(--background);
+  --apex-text-color: var(--text);
+}
+
+.light {
+  --success: #4caf50;
+  --warning-bg: #fccf66;
+  --warning: #fb8c00;
+  --error: #dc3131;
+  --backdrop: #eee;
+  --background: #fff;
+  --text: rgba(0, 0, 0, 0.75);
+  --text-disabled: rgba(0, 0, 0, 0.5);
+  --servertype-icon-filter: saturate(0.85);
+  --ace-theme: github;
+  --apex-background-color: var(--background);
+  --apex-text-color: var(--text);
+}

@@ -1,0 +1,74 @@
+{
+  "keepDefaultCss": true,
+  "sidebarClosedBelow": 1200,
+  "settings": {
+    "mode": {
+      "type": "class",
+      "tkey": "common.theme.Mode",
+      "options": [
+        {
+          "value": "light",
+          "tkey": "common.theme.mode.Light",
+          "default": true
+        },
+        {
+          "value": "dark",
+          "tkey": "common.theme.mode.Dark"
+        }
+      ]
+    },
+    "color": {
+      "type": "color",
+      "var": "--primary",
+      "default": "#07a7e3",
+      "derive": [
+        {
+          "type": "contrast",
+          "foreground": true,
+          "options": ["#fff", "#000"],
+          "var": "--text-primary"
+        },
+        {
+          "type": "opacity",
+          "opacity": 0.15,
+          "var": "--primary-hover"
+        },
+        {
+          "type": "complementary",
+          "var": "--primary-complement"
+        }
+      ],
+      "tkey": "common.theme.BaseColor"
+    },
+    "serverTypeDisplay": {
+      "type": "class",
+      "tkey": "common.theme.ServerTypeDisplay",
+      "options": [
+        {
+          "value": "server-type-icon",
+          "tkey": "common.theme.serverTypeDisplay.Icon",
+          "default": true
+        },
+        {
+          "value": "server-type-none",
+          "tkey": "common.theme.serverTypeDisplay.None"
+        }
+      ]
+    },
+    "listType": {
+      "type": "class",
+      "tkey": "common.theme.ListType",
+      "options": [
+        {
+          "value": "list-type-grid",
+          "tkey": "common.theme.listType.Grid",
+          "default": true
+        },
+        {
+          "value": "list-type-list",
+          "tkey": "common.theme.listType.List"
+        }
+      ]
+    }
+  }
+}

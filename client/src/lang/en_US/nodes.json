@@ -3,8 +3,13 @@
   "Nodes": "Nodes",
   "Edit": "Edit Node",
   "Add": "Add Node",
+  "Create": "Create Node",
   "Update": "Update Node",
   "Delete": "Delete Node",
+  "ConfirmDelete": "Do you really want to delete the node {name}?",
+  "Created": "Created Node",
+  "Updated": "Updated Node",
+  "Deleted": "Deleted Node",
   "PublicHost": "Public Host",
   "PublicPort": "Public Port",
   "PrivateHost": "Private Host",
@@ -12,9 +17,6 @@
   "SftpPort": "SFTP Port",
   "WithPrivateAddress": "Use a different host/port for server to server communication",
   "WithPrivateAddressHint": "This separate address is used when the main node needs to talk to the new node. Useful for example when the nodes are in the same network behind NAT.",
-  "SaveConfig": "Save Config",
-  "SavePublicKey": "Save Public Key",
-  "DeploymentInstruction": "To deploy the node, install PufferPanel on the new server and place the config file in `/etc/pufferpanel/`<br/>Restart PufferPanel on the new server afterwards.",
-  "UpdateSuccess": "Successfully updated node",
-  "UpdateError": "Error updating node"
+  "Deploy": "Deploy Node",
+  "DeploymentInstruction": "To deploy the node, install PufferPanel on the new server and place the code below in `/etc/pufferpanel/config.json`  \nRestart PufferPanel on the new server afterwards."
 }

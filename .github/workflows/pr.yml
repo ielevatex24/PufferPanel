@@ -24,19 +24,22 @@ jobs:
       with:
         path: pufferpanel
 
-    - name: Restore NPM cache
+    - name: Restore yarn cache
       uses: actions/cache@v2
       with:
-        path: ~/.npm
-        key: ${{ runner.os }}-nodemodules-14-pr-${{ hashFiles('client/package-lock.json') }}
+        path: ~/.yarn
+        key: ${{ runner.os }}-nodemodules-14-pr-${{ hashFiles('client/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-nodemodules-14-pr
-          
-    - name: Restore NPM cache
+
+    - name: Restore yarn cache
       uses: actions/cache@v2
       with:
-        path: client/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
+        path: |
+          client/node_modules
+          client/api/node_modules
+          client/frontend/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('client/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-node-
           
@@ -70,10 +73,10 @@ jobs:
         CXX: x86_64-w64-mingw32-g++
         CGO_ENABLED: 1
         
-    - name: npm install, build
+    - name: yarn install, build
       run: |
-        npm install
-        npm run build
+        yarn install
+        yarn build
       env:
         CI: true
       working-directory: client

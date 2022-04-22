@@ -146,7 +146,7 @@ func webManifest(c *gin.Context) {
 		"background_color": "#fff",
 		"display": "standalone",
 		"scope": "/",
-		"start_url": "/server",
+		"start_url": "/servers",
 		"icons": icons,
 	})
 }

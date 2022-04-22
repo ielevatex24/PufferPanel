@@ -545,7 +545,7 @@ func (p *Program) CreateFolder(name string) error {
 	if !pufferpanel.EnsureAccess(folder, p.GetEnvironment().GetRootDirectory()) {
 		return pufferpanel.ErrIllegalFileAccess
 	}
-	return os.Mkdir(folder, 0755)
+	return os.MkdirAll(folder, 0755)
 }
 
 func (p *Program) OpenFile(name string) (io.WriteCloser, error) {

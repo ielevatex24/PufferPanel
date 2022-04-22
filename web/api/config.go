@@ -24,6 +24,7 @@ func panelConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"themes": map[string]interface{}{
 			"active": config.GetString("panel.settings.defaultTheme"),
+			"settings": config.GetString("panel.settings.themeSettings"),
 			"available": themes,
 		},
 		"branding": map[string]interface{}{

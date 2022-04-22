@@ -35,19 +35,22 @@ jobs:
       with:
         path: pufferpanel
 
-    - name: Restore NPM cache
+    - name: Restore yarn cache
       uses: actions/cache@v2
       with:
-        path: ~/.npm
-        key: ${{ runner.os }}-nodemodules-14-${{ hashFiles('client/package-lock.json') }}
+        path: ~/.yarn
+        key: ${{ runner.os }}-nodemodules-14-${{ hashFiles('client/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-nodemodules-14
 
-    - name: Restore NPM cache
+    - name: Restore yarn cache
       uses: actions/cache@v2
       with:
-        path: client/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
+        path: |
+          client/node_modules
+          client/api/node_modules
+          client/frontend/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('client/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-node-
 
@@ -58,10 +61,10 @@ jobs:
         tar -zxf swag*.tar.gz -C ~/go/bin
         rm -rf swag*.tar.gz
 
-    - name: npm install, build
+    - name: yarn install, build
       run: |
-        npm install
-        npm run build
+        yarn install
+        yarn build
       env:
         CI: true
       working-directory: client
@@ -82,7 +85,7 @@ jobs:
     - name: Generate folders and remove excess files
       run: |
         mkdir -p build-artifacts/www
-        mv client/dist/* build-artifacts/www
+        mv client/frontend/dist/* build-artifacts/www
         mv assets/email build-artifacts
         rm -rf .git .github client web/swagger/swagger.json web/swagger/swagger.yaml build-artifacts/www/js/*.map
 
