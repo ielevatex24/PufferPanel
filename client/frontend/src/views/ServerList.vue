@@ -39,7 +39,7 @@ async function loadPage(page = 1) {
   const data = await api.server.list(page)
   addServers(data.servers)
   lastPage = data.paging.page
-  allServersLoaded.value = data.paging.page * data.paging.pageSize >= data.paging.total
+  allServersLoaded.value = data.paging.page * data.paging.pageSize >= (data.paging.total || 0)
   nextTick(() => {
     loadingPage = false
     if (!allServersLoaded.value && isLoaderVisible()) loadPage(lastPage + 1)

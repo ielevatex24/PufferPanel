@@ -34,7 +34,7 @@ async function loadPage(page = 1) {
   const data = await api.user.list(page)
   addUsers(data.users)
   lastPage = data.paging.page
-  allUsersLoaded.value = data.paging.page * data.paging.pageSize >= data.paging.total
+  allUsersLoaded.value = data.paging.page * data.paging.pageSize >= (data.paging.total || 0)
   nextTick(() => {
     loadingPage = false
     if (!allUsersLoaded.value && isLoaderVisible()) loadPage(lastPage + 1)
