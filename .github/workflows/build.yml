@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - master
+    - kraken
     tags:
     - v2.*
     paths-ignore:
