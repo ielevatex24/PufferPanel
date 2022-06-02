@@ -15,7 +15,7 @@ ENV YARN_REGISTRY=$npmproxy
 ENV GOPROXY=$goproxy
 
 RUN go version && \
-    apk add --update --no-cache gcc musl-dev git curl nodejs npm make gcc g++ && \
+    apk add --update --no-cache gcc musl-dev git curl nodejs npm make gcc g++ yarn && \
     mkdir /pufferpanel && \
     wget https://github.com/swaggo/swag/releases/download/v1.6.7/swag_1.6.7_Linux_x86_64.tar.gz && \
     mkdir -p ~/go/bin && \
