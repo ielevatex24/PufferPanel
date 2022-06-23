@@ -61,6 +61,13 @@ a[target="_blank"]:not(.dl-link)::after {
   vertical-align: top;
 }
 
+code {
+  font-family: var(--monospace-font);
+  background-color: var(--code-background);
+  padding: 0.25em;
+  border-radius: 8px;
+}
+
 pre {
   font-family: var(--monospace-font);
   border: 1px solid var(--text-disabled);
@@ -68,12 +75,10 @@ pre {
   border-radius: var(--border-radius);
   overflow: auto;
   outline: none;
-}
-
-code {
-  background-color: var(--backdrop);
-  padding: 0.25em;
-  border-radius: 8px;
+  background-color: var(--background);
+  code {
+    background-color: var(--background);
+  }
 }
 
 b {

@@ -31,6 +31,14 @@ html[dir="rtl"] #toasts .toast .button.toast {
   margin: 0 1em 0 0;
 }
 
+.button.neutral {
+  background-color: var(--backdrop);
+  color: var(--text);
+  .icon::before {
+    color: var(--text);
+  }
+}
+
 .button.primary {
   background-color: var(--primary);
   color: var(--text-primary);

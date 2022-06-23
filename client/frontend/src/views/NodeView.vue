@@ -25,6 +25,7 @@ const publicPort = ref('8080')
 const privateHost = ref('')
 const privatePort = ref('8080')
 const sftpPort = ref('5657')
+const currentStep = ref(1)
 
 onMounted(async () => {
   const node = await api.node.get(route.params.id)
@@ -135,10 +136,11 @@ function getDeployConfig() {
     <btn :disabled="!canSubmit()" color="primary" @click="submit()"><icon name="save" />{{ t('nodes.Update') }}</btn>
     <btn color="error" @click="deleteNode()"><icon name="remove" />{{ t('nodes.Delete') }}</btn>
     <btn @click="deploymentOpen = true" v-text="t('nodes.Deploy')" />
-    <overlay v-model="deploymentOpen" closable :title="t('nodes.Deploy')">
+    <overlay v-model="deploymentOpen" closable :title="t('nodes.Deploy')" @close="currentStep = 1">
       <!-- eslint-disable-next-line vue/no-v-html -->
-      <div v-html="markdown(t('nodes.DeploymentInstruction'))" />
-      <pre dir="ltr" contenteditable v-text="getDeployConfig()" />
+      <div v-html="markdown(t(`nodes.deploy.Step${currentStep}`, { config: getDeployConfig() }))" />
+      <btn v-if="currentStep < 5" @click="currentStep += 1" v-text="t('common.Next')" />
+      <btn v-else @click="deploymentOpen = false; currentStep = 1" v-text="t('common.Close')" />
     </overlay>
   </div>
 </template>
