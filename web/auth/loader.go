@@ -16,17 +16,17 @@ package auth
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3/middleware"
-	"github.com/pufferpanel/pufferpanel/v3/middleware/handlers"
+	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 )
 
 func RegisterRoutes(rg *gin.RouterGroup) {
 	rg.Use(func(c *gin.Context) {
 		middleware.ResponseAndRecover(c)
 	})
-	rg.POST("login", middleware.NeedsDatabase, LoginPost)
-	rg.POST("logout", middleware.NeedsDatabase, LogoutPost)
-	rg.POST("otp", middleware.NeedsDatabase, OtpPost)
-	rg.POST("register", middleware.NeedsDatabase, RegisterPost)
-	rg.POST("reauth", handlers.AuthMiddleware, middleware.NeedsDatabase, Reauth)
+	rg.POST("login", panelmiddleware.NeedsDatabase, LoginPost)
+	rg.POST("logout", panelmiddleware.NeedsDatabase, LogoutPost)
+	rg.POST("otp", panelmiddleware.NeedsDatabase, OtpPost)
+	rg.POST("register", panelmiddleware.NeedsDatabase, RegisterPost)
+	rg.POST("reauth", panelmiddleware.AuthMiddleware, panelmiddleware.NeedsDatabase, Reauth)
 	rg.GET("publickey", GetToken)
 }

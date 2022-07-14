@@ -16,19 +16,17 @@ package proxy
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
-	"github.com/pufferpanel/pufferpanel/v3/middleware/handlers"
+	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
-	"github.com/spf13/cast"
 	"gorm.io/gorm"
 	"net/http"
 	"strings"
 )
 
 func RegisterRoutes(rg *gin.RouterGroup) {
-	proxy := rg.Group("/daemon", handlers.HasOAuth2Token, middleware.NeedsDatabase)
+	proxy := rg.Group("/daemon", panelmiddleware.AuthMiddleware, panelmiddleware.NeedsDatabase)
 	{
 		g := proxy.Group("/server")
 		{
@@ -44,7 +42,7 @@ func RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 func proxyServerRequest(c *gin.Context) {
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ss := &services.Server{DB: db}
 	ns := &services.Node{DB: db}
 	ps := &services.Permission{DB: db}
@@ -65,11 +63,11 @@ func proxyServerRequest(c *gin.Context) {
 		return
 	}
 
-	token := c.MustGet("token").(*pufferpanel.Token)
+	_, exists := c.Get("token")
 
 	//if a session-token, we need to convert it to an oauth2 token instead
-	if len(token.Claims.Audience) == 1 && token.Claims.Audience[0] == "session" {
-		newToken, err := ps.GenerateOAuthForUser(cast.ToUint(token.Claims.Subject), &s.Identifier)
+	if !exists {
+		newToken, err := ps.GenerateOAuthForUser(c.MustGet("user").(*models.User).ID, &s.Identifier)
 		if response.HandleError(c, err, http.StatusInternalServerError) {
 			return
 		}

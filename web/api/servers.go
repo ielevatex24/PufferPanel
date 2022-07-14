@@ -21,8 +21,7 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/database"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
-	"github.com/pufferpanel/pufferpanel/v3/middleware/handlers"
+	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
@@ -35,30 +34,30 @@ import (
 )
 
 func registerServers(g *gin.RouterGroup) {
-	g.Handle("GET", "", handlers.OAuth2Handler(pufferpanel.ScopeServersView, false), searchServers)
+	g.Handle("GET", "", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, false), searchServers)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET"))
 
-	g.Handle("POST", "", handlers.OAuth2Handler(pufferpanel.ScopeServersCreate, false), middleware.HasTransaction, createServer)
-	g.Handle("GET", "/:serverId", handlers.OAuth2Handler(pufferpanel.ScopeServersView, true), getServer)
-	g.Handle("PUT", "/:serverId", handlers.OAuth2Handler(pufferpanel.ScopeServersCreate, false), middleware.HasTransaction, createServer)
-	g.Handle("POST", "/:serverId", handlers.OAuth2Handler(pufferpanel.ScopeServersEdit, true), middleware.HasTransaction, createServer)
-	g.Handle("DELETE", "/:serverId", handlers.OAuth2Handler(pufferpanel.ScopeServersDelete, true), middleware.HasTransaction, deleteServer)
-	g.Handle("PUT", "/:serverId/name/:name", handlers.OAuth2Handler(pufferpanel.ScopeServersEdit, true), middleware.HasTransaction, renameServer)
+	g.Handle("POST", "", panelmiddleware.HasPermission(pufferpanel.ScopeServersCreate, false), panelmiddleware.HasTransaction, createServer)
+	g.Handle("GET", "/:serverId", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, true), getServer)
+	g.Handle("PUT", "/:serverId", panelmiddleware.HasPermission(pufferpanel.ScopeServersCreate, false), panelmiddleware.HasTransaction, createServer)
+	g.Handle("POST", "/:serverId", panelmiddleware.HasPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, createServer)
+	g.Handle("DELETE", "/:serverId", panelmiddleware.HasPermission(pufferpanel.ScopeServersDelete, true), panelmiddleware.HasTransaction, deleteServer)
+	g.Handle("PUT", "/:serverId/name/:name", panelmiddleware.HasPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, renameServer)
 	g.Handle("OPTIONS", "/:serverId", response.CreateOptions("PUT", "GET", "POST", "DELETE"))
 
-	g.Handle("GET", "/:serverId/user", handlers.OAuth2Handler(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
+	g.Handle("GET", "/:serverId/user", panelmiddleware.HasPermission(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
 	g.Handle("OPTIONS", "/:serverId/user", response.CreateOptions("GET"))
 
-	g.Handle("GET", "/:serverId/user/:email", handlers.OAuth2Handler(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
-	g.Handle("PUT", "/:serverId/user/:email", handlers.OAuth2Handler(pufferpanel.ScopeServersEditUsers, true), middleware.HasTransaction, editServerUser)
-	g.Handle("DELETE", "/:serverId/user/:email", handlers.OAuth2Handler(pufferpanel.ScopeServersEditUsers, true), middleware.HasTransaction, removeServerUser)
+	g.Handle("GET", "/:serverId/user/:email", panelmiddleware.HasPermission(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
+	g.Handle("PUT", "/:serverId/user/:email", panelmiddleware.HasPermission(pufferpanel.ScopeServersEditUsers, true), panelmiddleware.HasTransaction, editServerUser)
+	g.Handle("DELETE", "/:serverId/user/:email", panelmiddleware.HasPermission(pufferpanel.ScopeServersEditUsers, true), panelmiddleware.HasTransaction, removeServerUser)
 	g.Handle("OPTIONS", "/:serverId/user/:email", response.CreateOptions("GET", "PUT", "DELETE"))
 
-	g.Handle("GET", "/:serverId/oauth2", handlers.OAuth2Handler(pufferpanel.ScopeServersView, true), getOAuth2Clients)
-	g.Handle("POST", "/:serverId/oauth2", handlers.OAuth2Handler(pufferpanel.ScopeServersView, true), createOAuth2Client)
+	g.Handle("GET", "/:serverId/oauth2", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, true), getOAuth2Clients)
+	g.Handle("POST", "/:serverId/oauth2", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, true), createOAuth2Client)
 	g.Handle("OPTIONS", "/:serverId/oauth2", response.CreateOptions("GET", "POST"))
 
-	g.Handle("DELETE", "/:serverId/oauth2/:clientId", handlers.OAuth2Handler(pufferpanel.ScopeServersView, true), deleteOAuth2Client)
+	g.Handle("DELETE", "/:serverId/oauth2/:clientId", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, true), deleteOAuth2Client)
 	g.Handle("OPTIONS", "/:serverId/oauth2/:clientId", response.CreateOptions("DELETE"))
 }
 
@@ -79,7 +78,7 @@ func registerServers(g *gin.RouterGroup) {
 // @Router /api/servers [get]
 func searchServers(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ss := &services.Server{DB: db}
 	ps := &services.Permission{DB: db}
 
@@ -243,7 +242,7 @@ func getServer(c *gin.Context) {
 // @Router /api/servers/{id} [put]
 func createServer(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ss := &services.Server{DB: db}
 	ns := &services.Node{DB: db}
 	us := &services.User{DB: db}
@@ -391,7 +390,7 @@ func createServer(c *gin.Context) {
 func deleteServer(c *gin.Context) {
 	var err error
 
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ss := &services.Server{DB: db}
 	ns := &services.Node{DB: db}
 
@@ -499,7 +498,7 @@ func deleteServer(c *gin.Context) {
 // @Router /api/servers/{id}/user [get]
 func getServerUsers(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ps := &services.Permission{DB: db}
 
 	t, exist := c.Get("server")
@@ -551,7 +550,7 @@ func getServerUsers(c *gin.Context) {
 // @Router /api/servers/{id}/users/{email} [put]
 func editServerUser(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	us := &services.User{DB: db}
 	ps := &services.Permission{DB: db}
 
@@ -664,7 +663,7 @@ func editServerUser(c *gin.Context) {
 // @Router /api/servers/{id}/users/{email} [delete]
 func removeServerUser(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	us := &services.User{DB: db}
 	ps := &services.Permission{DB: db}
 
@@ -802,7 +801,7 @@ func getAvailableOauth2Perms(c *gin.Context) {
 	user := c.MustGet("user").(*models.User)
 	server := c.MustGet("server").(*models.Server)
 
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ps := &services.Permission{DB: db}
 
 	perms, err := ps.GetForUserAndServer(user.ID, &server.Identifier)
@@ -827,7 +826,7 @@ func getOAuth2Clients(c *gin.Context) {
 	user := c.MustGet("user").(*models.User)
 	server := c.MustGet("server").(*models.Server)
 
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	os := &services.OAuth2{DB: db}
 
 	clients, err := os.GetForUserAndServer(user.ID, server.Identifier)
@@ -853,7 +852,7 @@ func createOAuth2Client(c *gin.Context) {
 	user := c.MustGet("user").(*models.User)
 	server := c.MustGet("server").(*models.Server)
 
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	os := &services.OAuth2{DB: db}
 
 	var request models.Client
@@ -907,7 +906,7 @@ func deleteOAuth2Client(c *gin.Context) {
 	server := c.MustGet("server").(*models.Server)
 	clientId := c.Param("clientId")
 
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	os := &services.OAuth2{DB: db}
 
 	client, err := os.Get(clientId)

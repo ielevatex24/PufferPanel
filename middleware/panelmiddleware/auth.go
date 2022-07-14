@@ -11,7 +11,7 @@
   limitations under the License.
 */
 
-package handlers
+package panelmiddleware
 
 import (
 	"github.com/gin-gonic/gin"
@@ -22,9 +22,9 @@ import (
 	"strings"
 )
 
-var noLogin = []string{"/auth/", "/error/", "/daemon/", "/api/"}
+var noLogin = []string{"/auth/", "/error/", "/daemon/", "/api/config"}
 var assetFiles = []string{".js", ".css", ".img", ".ico", ".png", ".gif"}
-var overrideRequireLogin = []string{"/auth/reauth"}
+var overrideRequireLogin = []string{"/auth/reauth", "/auth/logout"}
 
 const WWWAuthenticateHeader = "WWW-Authenticate"
 const WWWAuthenticateHeaderContents = "Bearer realm=\"\""

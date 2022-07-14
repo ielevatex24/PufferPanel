@@ -18,8 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
-	"github.com/pufferpanel/pufferpanel/v3/middleware/handlers"
+	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
@@ -33,15 +32,15 @@ const GithubUrl = "https://api.github.com/repos/pufferpanel/templates/git/trees/
 var client = http.Client{}
 
 func registerTemplates(g *gin.RouterGroup) {
-	g.Handle("GET", "", handlers.OAuth2Handler(pufferpanel.ScopeTemplatesView, false), getAllTemplates)
+	g.Handle("GET", "", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesView, false), getAllTemplates)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET"))
 
-	g.Handle("POST", "/import", handlers.OAuth2Handler(pufferpanel.ScopeTemplatesEdit, false), getImportableTemplates)
-	g.Handle("POST", "/import/:name", handlers.OAuth2Handler(pufferpanel.ScopeTemplatesEdit, false), importTemplate)
+	g.Handle("POST", "/import", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesEdit, false), getImportableTemplates)
+	g.Handle("POST", "/import/:name", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesEdit, false), importTemplate)
 
-	g.Handle("GET", "/:name", handlers.OAuth2Handler(pufferpanel.ScopeTemplatesView, false), getTemplate)
-	g.Handle("DELETE", "/:name", handlers.OAuth2Handler(pufferpanel.ScopeTemplatesView, false), deleteTemplate)
-	g.Handle("PUT", "/:name", handlers.OAuth2Handler(pufferpanel.ScopeTemplatesEdit, false), putTemplate)
+	g.Handle("GET", "/:name", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesView, false), getTemplate)
+	g.Handle("DELETE", "/:name", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesView, false), deleteTemplate)
+	g.Handle("PUT", "/:name", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesEdit, false), putTemplate)
 	g.Handle("OPTIONS", "/:name", response.CreateOptions("PUT", "GET", "POST", "DELETE"))
 }
 
@@ -56,7 +55,7 @@ func registerTemplates(g *gin.RouterGroup) {
 // @Failure 500 {object} response.Error
 // @Router /api/templates [get]
 func getAllTemplates(c *gin.Context) {
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ts := &services.Template{DB: db}
 
 	templates, err := ts.GetAll()
@@ -78,7 +77,7 @@ func getAllTemplates(c *gin.Context) {
 // @Failure 500 {object} response.Error
 // @Router /api/templates [get]
 func getTemplate(c *gin.Context) {
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ts := &services.Template{DB: db}
 
 	template, err := ts.Get(c.Param("name"))
@@ -104,7 +103,7 @@ func getTemplate(c *gin.Context) {
 // @Param name path string true "Template name"
 // @Router /api/templates/{name} [put]
 func putTemplate(c *gin.Context) {
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ts := &services.Template{DB: db}
 
 	templateName := c.Param("name")
@@ -144,7 +143,7 @@ func putTemplate(c *gin.Context) {
 // @Param name path string true "Template"
 // @Router /api/templates/import/{name} [post]
 func importTemplate(c *gin.Context) {
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ts := &services.Template{DB: db}
 
 	err := ts.ImportFromRepo(c.Param("name"))
@@ -167,7 +166,7 @@ func importTemplate(c *gin.Context) {
 // @Param name path string true "Template"
 // @Router /api/templates/{name} [delete]
 func deleteTemplate(c *gin.Context) {
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ts := &services.Template{DB: db}
 
 	err := ts.Delete(c.Param("name"))

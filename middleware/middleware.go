@@ -14,7 +14,6 @@
 package middleware
 
 import (
-	"database/sql"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
@@ -26,7 +25,6 @@ import (
 
 func ResponseAndRecover(c *gin.Context) {
 	defer func() {
-
 		if err := recover(); err != nil {
 			if _, ok := err.(error); !ok {
 				err = errors.New(pufferpanel.ToString(err))
@@ -49,26 +47,5 @@ func Recover(c *gin.Context) {
 		}
 	}()
 
-	c.Next()
-}
-
-func Database(c *gin.Context, db *sql.DB) {
-	trans, err := db.Begin()
-	if err != nil {
-		panic(err)
-	}
-
-	defer func() {
-		if err := recover(); err != nil {
-			_ = trans.Rollback()
-			panic(err)
-		} else {
-			err = trans.Commit()
-			if err != nil {
-				panic(err)
-			}
-		}
-	}()
-	c.Set("database", trans)
 	c.Next()
 }

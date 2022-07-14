@@ -17,8 +17,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
-	"github.com/pufferpanel/pufferpanel/v3/middleware/handlers"
+	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
@@ -29,16 +28,16 @@ import (
 )
 
 func registerNodes(g *gin.RouterGroup) {
-	g.Handle("GET", "", handlers.OAuth2Handler(pufferpanel.ScopeNodesView, false), getAllNodes)
-	g.Handle("POST", "", handlers.OAuth2Handler(pufferpanel.ScopeNodesEdit, false), createNode)
+	g.Handle("GET", "", panelmiddleware.HasPermission(pufferpanel.ScopeNodesView, false), getAllNodes)
+	g.Handle("POST", "", panelmiddleware.HasPermission(pufferpanel.ScopeNodesEdit, false), createNode)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET", "POST"))
 
-	g.Handle("GET", "/:id", handlers.OAuth2Handler(pufferpanel.ScopeNodesView, false), getNode)
-	g.Handle("PUT", "/:id", handlers.OAuth2Handler(pufferpanel.ScopeNodesEdit, false), updateNode)
-	g.Handle("DELETE", "/:id", handlers.OAuth2Handler(pufferpanel.ScopeNodesEdit, false), deleteNode)
-	g.Handle("OPTIONS", "/:id", response.CreateOptions("PUT", "GET", "POST", "DELETE"))
+	g.Handle("GET", "/:id", panelmiddleware.HasPermission(pufferpanel.ScopeNodesView, false), getNode)
+	g.Handle("PUT", "/:id", panelmiddleware.HasPermission(pufferpanel.ScopeNodesEdit, false), updateNode)
+	g.Handle("DELETE", "/:id", panelmiddleware.HasPermission(pufferpanel.ScopeNodesEdit, false), deleteNode)
+	g.Handle("OPTIONS", "/:id", response.CreateOptions("PUT", "GET", "DELETE"))
 
-	g.Handle("GET", "/:id/deployment", handlers.OAuth2Handler(pufferpanel.ScopeNodesDeploy, false), deployNode)
+	g.Handle("GET", "/:id/deployment", panelmiddleware.HasPermission(pufferpanel.ScopeNodesDeploy, false), deployNode)
 	g.Handle("OPTIONS", "/:id/deployment", response.CreateOptions("GET"))
 }
 
@@ -54,7 +53,7 @@ func registerNodes(g *gin.RouterGroup) {
 // @Router /api/nodes [get]
 func getAllNodes(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ns := &services.Node{DB: db}
 
 	var nodes *models.Nodes
@@ -88,7 +87,7 @@ func getAllNodes(c *gin.Context) {
 // @Router /api/nodes/{id} [get]
 func getNode(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ns := &services.Node{DB: db}
 
 	id, ok := validateId(c)
@@ -122,7 +121,7 @@ func getNode(c *gin.Context) {
 // @Router /api/nodes [post]
 func createNode(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ns := &services.Node{DB: db}
 
 	model := &models.NodeView{}
@@ -158,7 +157,7 @@ func createNode(c *gin.Context) {
 // @Router /api/nodes/{id} [put]
 func updateNode(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ns := &services.Node{DB: db}
 
 	viewModel := &models.NodeView{}
@@ -201,7 +200,7 @@ func updateNode(c *gin.Context) {
 // @Router /api/nodes/{id} [delete]
 func deleteNode(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ns := &services.Node{DB: db}
 
 	id, ok := validateId(c)
@@ -235,7 +234,7 @@ func deleteNode(c *gin.Context) {
 // @Router /api/nodes/{id}/deployment [get]
 func deployNode(c *gin.Context) {
 	var err error
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	ns := &services.Node{DB: db}
 
 	id, ok := validateId(c)

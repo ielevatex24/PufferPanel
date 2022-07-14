@@ -11,14 +11,13 @@
   limitations under the License.
 */
 
-package handlers
+package panelmiddleware
 
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
@@ -44,12 +43,6 @@ func HasOAuth2Token(c *gin.Context) {
 		failure = false
 		c.Next()
 		return
-	}
-
-	//if there's a cookie with the token, use that
-	cookie, _ := c.Cookie("puffer_auth")
-	if cookie != "" && c.Request.Header.Get("Authorization") == "" {
-		c.Request.Header.Set("Authorization", "Bearer "+cookie)
 	}
 
 	authHeader := c.Request.Header.Get("Authorization")
@@ -81,13 +74,13 @@ func HasOAuth2Token(c *gin.Context) {
 	c.Next()
 }
 
-func OAuth2Handler(requiredScope pufferpanel.Scope, requireServer bool) gin.HandlerFunc {
+func HasPermission(requiredScope pufferpanel.Scope, requireServer bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := middleware.GetDatabase(c)
+		db := GetDatabase(c)
 
 		if db == nil {
-			middleware.NeedsDatabase(c)
-			db = middleware.GetDatabase(c)
+			NeedsDatabase(c)
+			db = GetDatabase(c)
 			if db == nil {
 				response.HandleError(c, pufferpanel.ErrDatabaseNotAvailable, http.StatusInternalServerError)
 				return

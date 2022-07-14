@@ -19,7 +19,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
+	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"gorm.io/gorm"
@@ -30,7 +30,7 @@ import (
 )
 
 func registerTokens(g *gin.RouterGroup) {
-	g.POST("/token", middleware.NeedsDatabase, handleTokenRequest)
+	g.POST("/token", panelmiddleware.NeedsDatabase, handleTokenRequest)
 	g.OPTIONS("/token", response.CreateOptions("POST"))
 }
 
@@ -45,7 +45,7 @@ func handleTokenRequest(c *gin.Context) {
 		return
 	}
 
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	if db == nil {
 		c.JSON(http.StatusInternalServerError, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: "database not available"})
 		return

@@ -4,16 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/pufferpanel/pufferpanel/v3/middleware/handlers"
+	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"net/http"
 )
 
 func registerSettings(g *gin.RouterGroup) {
-	g.Handle("GET", "/:key", handlers.OAuth2Handler(pufferpanel.ScopeSettings, false), getSetting)
-	g.Handle("PUT", "/:key", handlers.OAuth2Handler(pufferpanel.ScopeSettings, false), setSetting)
-	g.Handle("POST", "", handlers.OAuth2Handler(pufferpanel.ScopeSettings, false), setSettings)
+	g.Handle("GET", "/:key", panelmiddleware.HasPermission(pufferpanel.ScopeSettings, false), getSetting)
+	g.Handle("PUT", "/:key", panelmiddleware.HasPermission(pufferpanel.ScopeSettings, false), setSetting)
+	g.Handle("POST", "", panelmiddleware.HasPermission(pufferpanel.ScopeSettings, false), setSettings)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET", "PUT"))
 }
 

@@ -17,7 +17,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
+	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"net/http"
@@ -25,7 +25,7 @@ import (
 )
 
 func LoginPost(c *gin.Context) {
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	us := &services.User{DB: db}
 	ps := &services.Permission{DB: db}
 
@@ -45,7 +45,7 @@ func LoginPost(c *gin.Context) {
 		userSession := sessions.Default(c)
 		userSession.Set("user", user.Email)
 		userSession.Set("time", time.Now().Unix())
-		userSession.Save()
+		_ = userSession.Save()
 		c.JSON(http.StatusOK, &LoginOtpResponse{
 			OtpNeeded: true,
 		})
@@ -65,7 +65,7 @@ func LoginPost(c *gin.Context) {
 }
 
 func OtpPost(c *gin.Context) {
-	db := middleware.GetDatabase(c)
+	db := panelmiddleware.GetDatabase(c)
 	us := &services.User{DB: db}
 	ps := &services.Permission{DB: db}
 
@@ -87,7 +87,7 @@ func OtpPost(c *gin.Context) {
 
 	if timestamp < time.Now().Unix()-300 {
 		userSession.Clear()
-		userSession.Save()
+		_ = userSession.Save()
 		response.HandleError(c, pufferpanel.ErrSessionExpired, http.StatusBadRequest)
 		return
 	}
