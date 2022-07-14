@@ -137,6 +137,7 @@ func migrateModels() error {
 		&models.Client{},
 		&models.UserSetting{},
 		&config.Setting{},
+		&models.Session{},
 	}
 
 	for _, v := range dbObjects {
