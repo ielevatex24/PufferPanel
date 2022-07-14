@@ -41,7 +41,6 @@ func HasOAuth2Token(c *gin.Context) {
 
 	if c.Request.Method == http.MethodOptions {
 		failure = false
-		c.Next()
 		return
 	}
 
@@ -71,7 +70,6 @@ func HasOAuth2Token(c *gin.Context) {
 
 	c.Set("token", token)
 	failure = false
-	c.Next()
 }
 
 func HasPermission(requiredScope pufferpanel.Scope, requireServer bool) gin.HandlerFunc {
@@ -162,35 +160,6 @@ func HasPermission(requiredScope pufferpanel.Scope, requireServer bool) gin.Hand
 			} else {
 				allowed = true
 			}
-		} else if audience == "session" {
-			//otherwise, we have to look at what the user has since session based
-			ps := &services.Permission{DB: db}
-			var perms *models.Permissions
-			if serverId == "" {
-				perms, err = ps.GetForUserAndServer(user.ID, nil)
-			} else {
-				perms, err = ps.GetForUserAndServer(user.ID, &serverId)
-			}
-
-			if response.HandleError(c, err, http.StatusInternalServerError) {
-				return
-			}
-
-			if requiredScope != pufferpanel.ScopeNone {
-				if pufferpanel.ContainsScope(perms.ToScopes(), requiredScope) {
-					allowed = true
-				} else {
-					perms, err = ps.GetForUserAndServer(user.ID, nil)
-					if response.HandleError(c, err, http.StatusInternalServerError) {
-						return
-					}
-					if pufferpanel.ContainsScope(perms.ToScopes(), pufferpanel.ScopeServersAdmin) {
-						allowed = true
-					}
-				}
-			} else {
-				allowed = true
-			}
 		} else {
 			c.AbortWithStatus(http.StatusForbidden)
 			return
@@ -203,6 +172,5 @@ func HasPermission(requiredScope pufferpanel.Scope, requireServer bool) gin.Hand
 
 		c.Set("server", server)
 		c.Set("user", user)
-		c.Next()
 	}
 }
