@@ -18,7 +18,7 @@ package spongedl
 
 import (
 	"encoding/json"
-	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v3"
 )
 
 type OperationFactory struct {

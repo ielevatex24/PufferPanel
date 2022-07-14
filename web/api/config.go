@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pufferpanel/pufferpanel/v2/config"
+	"github.com/pufferpanel/pufferpanel/v3/config"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -23,8 +23,8 @@ func panelConfig(c *gin.Context) {
 
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"themes": map[string]interface{}{
-			"active": config.GetString("panel.settings.defaultTheme"),
-			"settings": config.GetString("panel.settings.themeSettings"),
+			"active":    config.GetString("panel.settings.defaultTheme"),
+			"settings":  config.GetString("panel.settings.themeSettings"),
 			"available": themes,
 		},
 		"branding": map[string]interface{}{

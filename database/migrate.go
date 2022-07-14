@@ -2,8 +2,8 @@ package database
 
 import (
 	"github.com/go-gormigrate/gormigrate/v2"
-	"github.com/pufferpanel/pufferpanel/v2/config"
-	"github.com/pufferpanel/pufferpanel/v2/models"
+	"github.com/pufferpanel/pufferpanel/v3/config"
+	"github.com/pufferpanel/pufferpanel/v3/models"
 	"gorm.io/gorm"
 )
 
@@ -39,11 +39,13 @@ func migrate(dbConn *gorm.DB) error {
 					migrated := []NewSetting{}
 					for _, v := range settings {
 						migrated = append(migrated, NewSetting{
-							Key: v.Key,
+							Key:   v.Key,
 							Value: v.Value,
 						})
 					}
-					result = db.Create(&migrated)
+					if len(migrated) != 0 {
+						result = db.Create(&migrated)
+					}
 					if result.Error != nil {
 						return result.Error
 					}

@@ -19,9 +19,9 @@ package spongedl
 import (
 	"encoding/json"
 	"errors"
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/environments"
-	"github.com/pufferpanel/pufferpanel/v2/operations/forgedl"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/environments"
+	"github.com/pufferpanel/pufferpanel/v3/operations/forgedl"
 	"net/http"
 	"os"
 	"path"
@@ -30,8 +30,7 @@ import (
 
 const SpongeApiBaseUrl = "https://dl-api-new.spongepowered.org/api/v2/groups/org.spongepowered/artifacts/"
 
-var client = &http.Client{
-}
+var client = &http.Client{}
 
 type SpongeDl struct {
 	Recommended      bool

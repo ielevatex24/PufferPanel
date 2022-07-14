@@ -57,7 +57,7 @@ jobs:
         
     - name: Build Linux
       run: |
-        go build -o pufferpanel -buildvcs=false -v github.com/pufferpanel/pufferpanel/v2/cmd
+        go build -o pufferpanel -buildvcs=false -v github.com/pufferpanel/pufferpanel/v3/cmd
         go test -v ./...
       env:
         GOOS: linux
@@ -65,7 +65,7 @@ jobs:
         
     - name: Build Windows
       run: |
-        go build -o pufferpanel.exe -buildvcs=false -v github.com/pufferpanel/pufferpanel/v2/cmd
+        go build -o pufferpanel.exe -buildvcs=false -v github.com/pufferpanel/pufferpanel/v3/cmd
       env:
         GOOS: windows
         GOARCH: amd64

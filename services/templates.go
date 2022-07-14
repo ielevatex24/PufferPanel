@@ -15,8 +15,8 @@ package services
 
 import (
 	"encoding/json"
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/models"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/models"
 	"gorm.io/gorm"
 	"io"
 	"io/ioutil"

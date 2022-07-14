@@ -2,7 +2,7 @@ package archive
 
 import (
 	"github.com/mholt/archiver"
-	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v3"
 )
 
 type Archive struct {

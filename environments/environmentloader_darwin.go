@@ -17,8 +17,8 @@
 package environments
 
 import (
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/environments/tty"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/environments/tty"
 )
 
 func loadAdditionalModules(mapping map[string]pufferpanel.EnvironmentFactory) {

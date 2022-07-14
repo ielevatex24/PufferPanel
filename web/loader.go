@@ -18,15 +18,15 @@ import (
 	_ "github.com/alecthomas/template"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/pufferpanel/pufferpanel/v2/config"
-	"github.com/pufferpanel/pufferpanel/v2/middleware"
-	"github.com/pufferpanel/pufferpanel/v2/middleware/handlers"
-	"github.com/pufferpanel/pufferpanel/v2/web/api"
-	"github.com/pufferpanel/pufferpanel/v2/web/auth"
-	"github.com/pufferpanel/pufferpanel/v2/web/daemon"
-	"github.com/pufferpanel/pufferpanel/v2/web/oauth2"
-	"github.com/pufferpanel/pufferpanel/v2/web/proxy"
-	_ "github.com/pufferpanel/pufferpanel/v2/web/swagger"
+	"github.com/pufferpanel/pufferpanel/v3/config"
+	"github.com/pufferpanel/pufferpanel/v3/middleware"
+	"github.com/pufferpanel/pufferpanel/v3/middleware/handlers"
+	"github.com/pufferpanel/pufferpanel/v3/web/api"
+	"github.com/pufferpanel/pufferpanel/v3/web/auth"
+	"github.com/pufferpanel/pufferpanel/v3/web/daemon"
+	"github.com/pufferpanel/pufferpanel/v3/web/oauth2"
+	"github.com/pufferpanel/pufferpanel/v3/web/proxy"
+	_ "github.com/pufferpanel/pufferpanel/v3/web/swagger"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 	_ "github.com/swaggo/swag"
@@ -134,20 +134,20 @@ func webManifest(c *gin.Context) {
 
 	for i, s := range iconSizes {
 		icons[i] = map[string]interface{}{
-			"src": fmt.Sprintf("img/appicons/%d.png", s),
+			"src":   fmt.Sprintf("img/appicons/%d.png", s),
 			"sizes": fmt.Sprintf("%dx%d", s, s),
-			"type": "image/png",
+			"type":  "image/png",
 		}
 	}
 
 	c.JSON(http.StatusOK, map[string]interface{}{
-		"name": config.GetString("panel.settings.companyName"),
-		"short_name": config.GetString("panel.settings.companyName"),
+		"name":             config.GetString("panel.settings.companyName"),
+		"short_name":       config.GetString("panel.settings.companyName"),
 		"background_color": "#fff",
-		"display": "standalone",
-		"scope": "/",
-		"start_url": "/servers",
-		"icons": icons,
+		"display":          "standalone",
+		"scope":            "/",
+		"start_url":        "/servers",
+		"icons":            icons,
 	})
 }
 

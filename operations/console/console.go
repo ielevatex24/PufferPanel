@@ -17,7 +17,7 @@
 package console
 
 import (
-	"github.com/pufferpanel/pufferpanel/v2"
+	"github.com/pufferpanel/pufferpanel/v3"
 )
 
 type Console struct {

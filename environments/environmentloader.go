@@ -19,8 +19,8 @@ package environments
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/environments/docker"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/environments/docker"
 	"path/filepath"
 	"sync"
 )

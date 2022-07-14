@@ -16,7 +16,7 @@
 
 package forgedl
 
-import "github.com/pufferpanel/pufferpanel/v2"
+import "github.com/pufferpanel/pufferpanel/v3"
 
 type OperationFactory struct {
 	pufferpanel.OperationFactory

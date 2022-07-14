@@ -16,10 +16,10 @@ package auth
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/pufferpanel/pufferpanel/v2"
-	"github.com/pufferpanel/pufferpanel/v2/middleware"
-	"github.com/pufferpanel/pufferpanel/v2/response"
-	"github.com/pufferpanel/pufferpanel/v2/services"
+	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/middleware"
+	"github.com/pufferpanel/pufferpanel/v3/response"
+	"github.com/pufferpanel/pufferpanel/v3/services"
 	"net/http"
 	"time"
 )
@@ -85,7 +85,7 @@ func OtpPost(c *gin.Context) {
 		return
 	}
 
-	if timestamp < time.Now().Unix() - 300 {
+	if timestamp < time.Now().Unix()-300 {
 		userSession.Clear()
 		userSession.Save()
 		response.HandleError(c, pufferpanel.ErrSessionExpired, http.StatusBadRequest)
@@ -119,7 +119,7 @@ type LoginOtpResponse struct {
 }
 
 type LoginResponse struct {
-	Session string        `json:"session"`
+	Session string              `json:"session"`
 	Scopes  []pufferpanel.Scope `json:"scopes,omitempty"`
 }
 
