@@ -84,7 +84,8 @@ func (us *User) Login(email string, password string) (user *models.User, session
 		return
 	}
 
-	sessionToken, err = GenerateSession(user.ID)
+	ss := &Session{DB: us.DB}
+	sessionToken, err = ss.Create(user)
 	return
 }
 
@@ -109,7 +110,8 @@ func (us *User) LoginOtp(email string, token string) (user *models.User, session
 		return
 	}
 
-	sessionToken, err = GenerateSession(user.ID)
+	ss := &Session{DB: us.DB}
+	sessionToken, err = ss.Create(user)
 	return
 }
 
@@ -171,7 +173,7 @@ func (us *User) GetOtpStatus(userId uint) (enabled bool, err error) {
 	return
 }
 
-func (us *User) StartOtpEnroll(userId uint) (secret string, img string, err error) {
+func (us *User) StartOtpEnroll(userId uint) (secret string, imageString string, err error) {
 	user, err := us.GetById(userId)
 	if err != nil {
 		return
@@ -194,13 +196,13 @@ func (us *User) StartOtpEnroll(userId uint) (secret string, img string, err erro
 	}
 
 	var buf bytes.Buffer
-	var image image.Image
-	image, err = key.Image(256, 256)
+	var img image.Image
+	img, err = key.Image(256, 256)
 	if err != nil {
 		return
 	}
-	png.Encode(&buf, image)
-	img = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
+	_ = png.Encode(&buf, img)
+	imageString = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 
 	secret = key.Secret()
 	return

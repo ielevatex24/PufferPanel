@@ -25,6 +25,7 @@ import (
 func Reauth(c *gin.Context) {
 	db := middleware.GetDatabase(c)
 	ps := &services.Permission{DB: db}
+	ss := &services.Session{DB: db}
 
 	user, _ := c.MustGet("user").(*models.User)
 
@@ -33,7 +34,7 @@ func Reauth(c *gin.Context) {
 		return
 	}
 
-	session, err := services.GenerateSession(user.ID)
+	session, err := ss.Create(user)
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
