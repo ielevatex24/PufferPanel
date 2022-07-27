@@ -15,12 +15,11 @@ package panelmiddleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/database"
+	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -54,7 +53,7 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
-	var userId uint
+	var user models.User
 
 	cookie, err := c.Cookie("puffer_auth")
 	if err == http.ErrNoCookie || cookie == "" {
@@ -68,50 +67,40 @@ func AuthMiddleware(c *gin.Context) {
 			}
 		}
 
-		HasOAuth2Token(c)
+		//check for token Auth header
+		authHeader := c.Request.Header.Get("Authorization")
+		authHeader = strings.TrimSpace(authHeader)
 
-		//check to see if they had a token which was valid
-		token, exists := c.Get("token")
-		if !exists {
-			c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		//pull user from the token
-
-		ti, passes := token.(*pufferpanel.Token)
-		if !passes {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 {
 			c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 
-		id, err := strconv.ParseUint(ti.Claims.Subject, 10, 64)
-		if err != nil {
+		if parts[0] != "Bearer" || parts[1] == "" {
 			c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		userId = uint(id)
+
+		session := parts[1]
+
+		ss := services.Session{DB: db}
+		user, err = ss.ValidateUser(session)
 	} else if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	} else {
 		//pull user from the session
 		ss := services.Session{DB: db}
-		userId, err = ss.Validate(cookie)
-		if response.HandleError(c, err, http.StatusUnauthorized) {
-			c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
-			return
-		}
+		user, err = ss.ValidateUser(cookie)
 	}
 
-	us := services.User{DB: db}
-	user, err := us.GetById(userId)
 	if response.HandleError(c, err, http.StatusUnauthorized) {
 		c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
 		return
 	}
 
-	c.Set("user", user)
+	c.Set("user", &user)
 	c.Next()
 }

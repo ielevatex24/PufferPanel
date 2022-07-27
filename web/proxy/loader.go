@@ -45,7 +45,6 @@ func proxyServerRequest(c *gin.Context) {
 	db := panelmiddleware.GetDatabase(c)
 	ss := &services.Server{DB: db}
 	ns := &services.Node{DB: db}
-	ps := &services.Permission{DB: db}
 
 	serverId := c.Param("id")
 	if serverId == "" {
@@ -61,19 +60,6 @@ func proxyServerRequest(c *gin.Context) {
 	} else if s == nil || s.Identifier == "" {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
-	}
-
-	_, exists := c.Get("token")
-
-	//if a session-token, we need to convert it to an oauth2 token instead
-	if !exists {
-		newToken, err := ps.GenerateOAuthForUser(c.MustGet("user").(*models.User).ID, &s.Identifier)
-		if response.HandleError(c, err, http.StatusInternalServerError) {
-			return
-		}
-
-		//set new header
-		c.Request.Header.Set("Authorization", "Bearer "+newToken)
 	}
 
 	if s.Node.IsLocal() {

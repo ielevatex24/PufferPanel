@@ -5,21 +5,8 @@ export class InMemorySessionStore {
   _scopes = null
   _timeout = null
 
-  setToken(token, expires) {
-    clearTimeout(this._timeout)
-    this._token = token
-    setTimeout(() => {
-      this._token = null
-      this._scopes = null
-    }, (expires * 1000) - Date.now())
-  }
-
   setScopes(scopes) {
     this._scopes = scopes
-  }
-
-  getToken() {
-    return this._token
   }
 
   getScopes() {
@@ -27,7 +14,6 @@ export class InMemorySessionStore {
   }
 
   deleteSession() {
-    this._token = null
     this._scopes = null
   }
 }
@@ -46,10 +32,6 @@ export class CookieSessionStore {
 
   constructor(options = defaultCookieSessionStoreOptions) {
     this._cookieOptions = options
-  }
-
-  setToken(token, expires) {
-    Cookies.set(AUTH_COOKIE_NAME, token, { ...this._cookieOptions, expires: new Date(expires * 1000) })
   }
 
   setScopes(scopes) {

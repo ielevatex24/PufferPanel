@@ -20,7 +20,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/middleware"
-	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/web/api"
 	"github.com/pufferpanel/pufferpanel/v3/web/auth"
 	"github.com/pufferpanel/pufferpanel/v3/web/daemon"
@@ -54,7 +53,7 @@ func RegisterRoutes(e *gin.Engine) {
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if config.GetBool("daemon.enable") {
-		daemon.RegisterDaemonRoutes(e.Group("/daemon", panelmiddleware.HasOAuth2Token))
+		daemon.RegisterDaemonRoutes(e.Group("/daemon"))
 	}
 
 	if config.GetBool("panel.enable") {

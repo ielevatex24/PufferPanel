@@ -326,7 +326,7 @@ func createServer(c *gin.Context) {
 	reader := ioutil.NopCloser(bytes.NewReader(data))
 
 	//we need to get your new token
-	token, err := ps.GenerateOAuthForUser(c.MustGet("user").(*models.User).ID, nil)
+	token, err := c.Cookie("puffer_auth")
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
@@ -413,12 +413,6 @@ func deleteServer(c *gin.Context) {
 		return
 	}
 
-	user, ok := t.(*models.User)
-	if !ok {
-		response.HandleError(c, pufferpanel.ErrUnknownError, http.StatusInternalServerError)
-		return
-	}
-
 	node, err := ns.Get(server.NodeID)
 	if err != nil {
 		response.HandleError(c, err, http.StatusInternalServerError)
@@ -448,7 +442,7 @@ func deleteServer(c *gin.Context) {
 		return
 	}
 
-	newHeader, err := ps.GenerateOAuthForUser(user.ID, &server.Identifier)
+	newHeader, err := c.Cookie("puffer_auth")
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}

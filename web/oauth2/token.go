@@ -14,7 +14,6 @@
 package oauth2
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pufferpanel/pufferpanel/v3"
@@ -22,9 +21,7 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
-	"gorm.io/gorm"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -51,90 +48,51 @@ func handleTokenRequest(c *gin.Context) {
 		return
 	}
 
+	session := &services.Session{DB: db}
+
 	switch strings.ToLower(request.GrantType) {
 	case "client_credentials":
 		{
-			if strings.HasPrefix(request.ClientId, ".node_") {
-				nodeId := strings.TrimPrefix(request.ClientId, ".node_")
-				id, err := strconv.Atoi(nodeId)
-				if err != nil || id <= 0 {
-					if err == nil {
-						err = errors.New("node id must be positive")
-					}
-					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_client", ErrorDescription: err.Error()})
-					return
-				}
-				ns := &services.Node{DB: db}
-				node, err := ns.Get(uint(id))
-				if err == gorm.ErrRecordNotFound {
-					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: "invalid node"})
-					return
-				} else if err != nil {
-					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: "invalid request"})
-					return
-				}
-
-				if node.Secret != request.ClientSecret {
-					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_client"})
-					return
-				}
-				//at this point, we've validate it's a node, we can issue the token
-				ts, err := services.GenerateOAuthForNode(node.ID)
-				if err != nil {
-					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
-					return
-				}
-
-				c.JSON(http.StatusOK, &oauth2TokenResponse{
-					AccessToken: ts,
-					TokenType:   "Bearer",
-					Scope:       string(pufferpanel.ScopeOAuth2Auth),
-					ExpiresIn:   int64(time.Hour),
-				})
-
-				return
-			} else {
-				os := &services.OAuth2{DB: db}
-				client, err := os.Get(request.ClientId)
-				if err != nil {
-					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
-					return
-				}
-
-				if !client.ValidateSecret(request.ClientSecret) {
-					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_client"})
-					return
-				}
-
-				//if the client we have has 0 scopes, then we will have to pull the rights the user has
-				if len(client.Scopes) == 0 {
-					ps := &services.Permission{DB: db}
-					var serverId *string
-					if client.ServerId != "" {
-						serverId = &client.ServerId
-					}
-					perms, err := ps.GetForUserAndServer(client.UserId, serverId)
-					if err != nil {
-						c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
-						return
-					}
-					client.Scopes = perms.ToScopes()
-				}
-
-				token, err := services.GenerateOAuthForClient(client)
-				if err != nil {
-					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
-					return
-				}
-
-				c.JSON(http.StatusOK, &oauth2TokenResponse{
-					AccessToken: token,
-					TokenType:   "Bearer",
-					Scope:       string(pufferpanel.ScopeOAuth2Auth),
-					ExpiresIn:   int64(time.Hour),
-				})
+			os := &services.OAuth2{DB: db}
+			client, err := os.Get(request.ClientId)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 				return
 			}
+
+			if !client.ValidateSecret(request.ClientSecret) {
+				c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_client"})
+				return
+			}
+
+			//if the client we have has 0 scopes, then we will have to pull the rights the user has
+			if len(client.Scopes) == 0 {
+				ps := &services.Permission{DB: db}
+				var serverId *string
+				if client.ServerId != "" {
+					serverId = &client.ServerId
+				}
+				perms, err := ps.GetForUserAndServer(client.UserId, serverId)
+				if err != nil {
+					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+					return
+				}
+				client.Scopes = perms.ToScopes()
+			}
+
+			token, err := session.CreateForClient(client)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+				return
+			}
+
+			c.JSON(http.StatusOK, &oauth2TokenResponse{
+				AccessToken: token,
+				TokenType:   "Bearer",
+				Scope:       string(pufferpanel.ScopeOAuth2Auth),
+				ExpiresIn:   int64(time.Hour),
+			})
+			return
 		}
 	case "password":
 		{
@@ -147,18 +105,12 @@ func handleTokenRequest(c *gin.Context) {
 
 			//validate this is a bearer token and a good JWT token
 			auth = strings.TrimPrefix(auth, "Bearer ")
-			token, err := services.ParseToken(auth)
+			node, err := session.ValidateNode(auth)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 				return
 			}
 
-			//validate token can auth on behalf of users
-			scopes := token.Claims.PanelClaims.Scopes[""]
-			if scopes == nil || len(scopes) == 0 || !pufferpanel.ContainsScope(scopes, pufferpanel.ScopeOAuth2Auth) {
-				c.JSON(http.StatusOK, &oauth2TokenResponse{Error: "unauthorized_client"})
-				return
-			}
 			us := &services.User{DB: db}
 			ss := &services.Server{DB: db}
 
@@ -176,6 +128,12 @@ func handleTokenRequest(c *gin.Context) {
 				return
 			}
 
+			//ensure the node asking for the credential check is where this server is
+			if server.NodeID != node.ID {
+				c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
+				return
+			}
+
 			//confirm user has access to this server
 			ps := &services.Permission{DB: db}
 			perms, err := ps.GetForUserAndServer(user.ID, &server.Identifier)
@@ -189,17 +147,18 @@ func handleTokenRequest(c *gin.Context) {
 			}
 
 			//validate their credentials
-			user, jwtToken, optNeeded, err := us.Login(user.Email, request.Password)
+			user, token, optNeeded, err := us.Login(user.Email, request.Password)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
 				return
-			} else if optNeeded == false && jwtToken == "" {
+			} else if optNeeded == false && token == "" {
 				//if they do not have opt enabled, but we don't have a token... it's still a bad login
 				c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
 				return
 			} else if optNeeded == true {
 				//at this point, their login credentials were valid, and we need to shortcut because otp
-				jwtToken, err = services.GenerateSession(user.ID)
+				sessionService := &services.Session{DB: db}
+				token, err = sessionService.CreateForUser(user)
 				if err != nil {
 					logging.Error.Printf("Error generating token: %s", err.Error())
 					c.JSON(http.StatusBadRequest, &oauth2TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
@@ -216,7 +175,7 @@ func handleTokenRequest(c *gin.Context) {
 			c.Header("Cache-Control", "no-store")
 			c.Header("Pragma", "no-cache")
 			c.JSON(http.StatusOK, &oauth2TokenResponse{
-				AccessToken: jwtToken,
+				AccessToken: token,
 				TokenType:   "Bearer",
 				Scope:       strings.Join(mappedScopes, " "),
 				ExpiresIn:   int64(time.Hour),

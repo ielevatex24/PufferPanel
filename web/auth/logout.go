@@ -13,6 +13,12 @@ func LogoutPost(c *gin.Context) {
 	ss := services.Session{DB: db}
 
 	cookie, err := c.Cookie("puffer_auth")
+	if err == http.ErrNoCookie {
+		cookie = c.Query("token")
+		if cookie != "" {
+			err = nil
+		}
+	}
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}

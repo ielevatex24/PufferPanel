@@ -152,7 +152,6 @@ func internalRun(c chan error, terminate chan bool) {
 }
 
 func panel(ch chan error) {
-	services.ValidateTokenLoaded()
 	services.LoadEmailService()
 
 	//if we have the web, then let's use our sftp auth instead

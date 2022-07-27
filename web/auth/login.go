@@ -58,8 +58,14 @@ func LoginPost(c *gin.Context) {
 	}
 
 	data := &LoginResponse{}
-	data.Session = session
+	//data.Session = session
 	data.Scopes = perms.ToScopes()
+
+	secure := false
+	if c.Request.TLS != nil {
+		secure = true
+	}
+	c.SetCookie("puffer_auth", session, int(time.Hour/time.Second), "/", "", secure, false)
 
 	c.JSON(http.StatusOK, data)
 }
@@ -103,8 +109,14 @@ func OtpPost(c *gin.Context) {
 	}
 
 	data := &LoginResponse{}
-	data.Session = session
+	//data.Session = session
 	data.Scopes = perms.ToScopes()
+
+	secure := false
+	if c.Request.TLS != nil {
+		secure = true
+	}
+	c.SetCookie("puffer_auth", session, int(time.Hour/time.Second), "/", "", secure, true)
 
 	c.JSON(http.StatusOK, data)
 }
@@ -119,8 +131,7 @@ type LoginOtpResponse struct {
 }
 
 type LoginResponse struct {
-	Session string              `json:"session"`
-	Scopes  []pufferpanel.Scope `json:"scopes,omitempty"`
+	Scopes []pufferpanel.Scope `json:"scopes,omitempty"`
 }
 
 type OtpRequestData struct {

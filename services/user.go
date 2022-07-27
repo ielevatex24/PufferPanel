@@ -85,7 +85,7 @@ func (us *User) Login(email string, password string) (user *models.User, session
 	}
 
 	ss := &Session{DB: us.DB}
-	sessionToken, err = ss.Create(user)
+	sessionToken, err = ss.CreateForUser(user)
 	return
 }
 
@@ -111,7 +111,7 @@ func (us *User) LoginOtp(email string, token string) (user *models.User, session
 	}
 
 	ss := &Session{DB: us.DB}
-	sessionToken, err = ss.Create(user)
+	sessionToken, err = ss.CreateForUser(user)
 	return
 }
 

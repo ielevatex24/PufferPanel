@@ -28,5 +28,4 @@ func RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("otp", panelmiddleware.NeedsDatabase, OtpPost)
 	rg.POST("register", panelmiddleware.NeedsDatabase, RegisterPost)
 	rg.POST("reauth", panelmiddleware.AuthMiddleware, panelmiddleware.NeedsDatabase, Reauth)
-	rg.GET("publickey", GetToken)
 }

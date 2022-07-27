@@ -14,63 +14,13 @@
 package panelmiddleware
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"net/http"
-	"runtime/debug"
-	"strconv"
-	"strings"
 )
-
-func HasOAuth2Token(c *gin.Context) {
-	failure := true
-	defer func() {
-		if err := recover(); err != nil {
-			logging.Error.Printf("Error handling auth check: %s\n%s", err, debug.Stack())
-			failure = true
-		}
-		if failure && !c.IsAborted() {
-			c.AbortWithStatus(500)
-		}
-	}()
-
-	if c.Request.Method == http.MethodOptions {
-		failure = false
-		return
-	}
-
-	authHeader := c.Request.Header.Get("Authorization")
-	authHeader = strings.TrimSpace(authHeader)
-
-	parts := strings.SplitN(authHeader, " ", 2)
-	if len(parts) != 2 {
-		c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	if parts[0] != "Bearer" || parts[1] == "" {
-		c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	token, err := services.ParseToken(parts[1])
-
-	if err != nil || !token.Valid {
-		c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	c.Set("token", token)
-	failure = false
-}
 
 func HasPermission(requiredScope pufferpanel.Scope, requireServer bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -85,21 +35,20 @@ func HasPermission(requiredScope pufferpanel.Scope, requireServer bool) gin.Hand
 			}
 		}
 
-		token, ok := c.Get("token")
-		if !ok {
-			response.HandleError(c, errors.New("token invalid"), http.StatusInternalServerError)
-			return
-		}
-		jwtToken, ok := token.(*pufferpanel.Token)
-		if !ok {
-			response.HandleError(c, errors.New("token invalid"), http.StatusInternalServerError)
-			return
-		}
-
-		ti := jwtToken.Claims
-
 		ss := &services.Server{DB: db}
-		us := &services.User{DB: db}
+		ps := &services.Permission{DB: db}
+
+		u, exists := c.Get("user")
+		if !exists {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		user, ok := u.(*models.User)
+		if !ok {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
 
 		var serverId string
 
@@ -122,47 +71,30 @@ func HasPermission(requiredScope pufferpanel.Scope, requireServer bool) gin.Hand
 			serverId = server.Identifier
 		}
 
-		userId, err := strconv.ParseUint(ti.Subject, 10, 64)
-		if err != nil {
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-
-		user, err := us.GetById(uint(userId))
-		if err != nil {
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-
 		allowed := false
 
-		//if this is an audience of oauth2, we can use token directly
-		//we only use one audience, so we will only pull that one
-		if len(ti.Audience) != 1 {
-			c.AbortWithStatus(http.StatusForbidden)
-			return
-		}
+		if requiredScope != pufferpanel.ScopeNone {
+			permissions, err := ps.GetForUserAndServer(user.ID, &serverId)
+			if err != nil {
+				c.AbortWithStatus(http.StatusForbidden)
+				return
+			}
 
-		audience := ti.Audience[0]
-
-		if audience == "oauth2" {
-			if requiredScope != pufferpanel.ScopeNone {
-				scopes := ti.PanelClaims.Scopes[serverId]
-				if scopes != nil && pufferpanel.ContainsScope(scopes, requiredScope) {
-					allowed = true
-				} else {
-					//if there isn't a defined rule, is this user an admin?
-					scopes := ti.PanelClaims.Scopes[""]
-					if scopes != nil && pufferpanel.ContainsScope(scopes, pufferpanel.ScopeServersAdmin) {
-						allowed = true
-					}
-				}
-			} else {
+			if pufferpanel.ContainsScope(permissions.ToScopes(), requiredScope) {
 				allowed = true
+			} else if serverId != "" {
+				//if there isn't a defined rule, is this user an admin?
+				permissions, err = ps.GetForUserAndServer(user.ID, &serverId)
+				if err != nil {
+					c.AbortWithStatus(http.StatusForbidden)
+					return
+				}
+				if pufferpanel.ContainsScope(permissions.ToScopes(), pufferpanel.ScopeServersAdmin) {
+					allowed = true
+				}
 			}
 		} else {
-			c.AbortWithStatus(http.StatusForbidden)
-			return
+			allowed = true
 		}
 
 		if !allowed {
@@ -171,6 +103,5 @@ func HasPermission(requiredScope pufferpanel.Scope, requireServer bool) gin.Hand
 		}
 
 		c.Set("server", server)
-		c.Set("user", user)
 	}
 }

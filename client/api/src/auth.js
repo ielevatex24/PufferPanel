@@ -11,9 +11,7 @@ export class AuthApi {
     this._sessionStore = sessionStore
   }
 
-  _handleLogin(token, scopes) {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    this._sessionStore.setToken(token, payload.exp)
+  _handleLogin(scopes) {
     this._sessionStore.setScopes(scopes)
     return true
   }
@@ -21,23 +19,23 @@ export class AuthApi {
   async login(email, password) {
     const res = await this._api.post('/auth/login', { email, password })
     if (res.data.otpNeeded) return 'otp'
-    return this._handleLogin(res.data.session, res.data.scopes)
+    return this._handleLogin(res.data.scopes)
   }
 
   async loginOtp(token) {
     const res = await this._api.post('/auth/otp', { token })
-    return this._handleLogin(res.data.session, res.data.scopes)
+    return this._handleLogin(res.data.scopes)
   }
 
   async register(username, email, password) {
     const res = await this._api.post('/auth/register', { username, email, password })
-    return this._handleLogin(res.data.token, res.data.scopes)
+    return this._handleLogin(res.data.scopes)
   }
 
   async reauth() {
     const res = await this._api.post('/auth/reauth')
     if (is2xx(res.status)) {
-      this._handleLogin(res.data.session, res.data.scopes)
+      this._handleLogin(res.data.scopes)
     }
   }
 

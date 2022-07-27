@@ -57,13 +57,7 @@ func registerSelf(g *gin.RouterGroup) {
 // @Failure 500 {object} response.Error
 // @Router /api/self [get]
 func getSelf(c *gin.Context) {
-	t, exist := c.Get("user")
-	user, ok := t.(*models.User)
-
-	if !exist || !ok {
-		response.HandleError(c, pufferpanel.ErrUnknownError, http.StatusInternalServerError)
-		return
-	}
+	user := c.MustGet("user").(*models.User)
 
 	c.JSON(http.StatusOK, models.FromUser(user))
 }
