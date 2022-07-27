@@ -71,6 +71,15 @@ func HasPermission(requiredScope pufferpanel.Scope, requireServer bool) gin.Hand
 			serverId = server.Identifier
 		}
 
+		//if we have a client context, we need to validate that client can access this server
+		if clientRaw, exists := c.Get("client"); exists {
+			client := clientRaw.(*models.Client)
+			if client.ServerId != "" && client.ServerId != serverId {
+				c.AbortWithStatus(http.StatusForbidden)
+				return
+			}
+		}
+
 		allowed := false
 
 		if requiredScope != pufferpanel.ScopeNone {

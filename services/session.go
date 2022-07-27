@@ -37,18 +37,7 @@ func (ss *Session) CreateForClient(node *models.Client) (string, error) {
 	return token, err
 }
 
-func (ss *Session) ValidateUser(token string) (models.User, error) {
-	session := &models.Session{Token: token}
-	err := ss.DB.Preload("User").Where(session).Find(session).Error
-
-	//validate this session is for a user
-	if err == nil && session.UserId == nil {
-		err = gorm.ErrRecordNotFound
-	}
-	return session.User, err
-}
-
-func (ss *Session) ValidateClient(token string) (models.Client, error) {
+func (ss *Session) Validate(token string) (*models.Session, error) {
 	session := &models.Session{Token: token}
 	err := ss.DB.Preload("Client").Preload("User").Preload("Server").Where(session).Find(session).Error
 
@@ -56,13 +45,18 @@ func (ss *Session) ValidateClient(token string) (models.Client, error) {
 	if err == nil && session.ClientId == nil {
 		err = gorm.ErrRecordNotFound
 	}
-	return session.Client, err
+
+	if session.ExpirationTime.Before(time.Now()) {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return session, err
 }
 
-func (ss *Session) ValidateNode(token string) (models.Node, error) {
+func (ss *Session) ValidateNode(token string) (*models.Node, error) {
 	node := &models.Node{Secret: token}
 	err := ss.DB.Where(node).First(node).Error
-	return *node, err
+	return node, err
 }
 
 func (ss *Session) Expire(token string) error {

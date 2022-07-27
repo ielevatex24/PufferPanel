@@ -19,6 +19,7 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
+	"gorm.io/gorm"
 	"net/http"
 	"strings"
 )
@@ -53,6 +54,8 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
+	ss := services.Session{DB: db}
+
 	var user models.User
 
 	cookie, err := c.Cookie("puffer_auth")
@@ -85,15 +88,40 @@ func AuthMiddleware(c *gin.Context) {
 		}
 
 		session := parts[1]
+		sess, err := ss.Validate(session)
 
-		ss := services.Session{DB: db}
-		user, err = ss.ValidateUser(session)
+		if err == gorm.ErrRecordNotFound {
+			c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		} else if response.HandleError(c, err, http.StatusInternalServerError) {
+			return
+		}
+
+		if sess.UserId != nil {
+			user = sess.User
+		}
+		if sess.ClientId != nil {
+			c.Set("client", &sess.Client)
+		}
 	} else if response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	} else {
 		//pull user from the session
 		ss := services.Session{DB: db}
-		user, err = ss.ValidateUser(cookie)
+		sess, err := ss.Validate(cookie)
+
+		if err == gorm.ErrRecordNotFound {
+			c.Header(WWWAuthenticateHeader, WWWAuthenticateHeaderContents)
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		} else if response.HandleError(c, err, http.StatusInternalServerError) {
+			return
+		}
+
+		if sess.UserId != nil {
+			user = sess.User
+		}
 	}
 
 	if response.HandleError(c, err, http.StatusUnauthorized) {
