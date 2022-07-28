@@ -92,7 +92,7 @@ func openConnection() (err error) {
 
 	if config.GetBool("panel.database.log") {
 		logging.Info.Printf("Database logging enabled")
-		gormConfig.Logger.LogMode(logger.Info)
+		gormConfig.Logger = gormConfig.Logger.LogMode(logger.Info)
 	}
 
 	// Sqlite doesn't implement constraints see  https://github.com/go-gorm/gorm/wiki/GORM-V2-Release-Note-Draft#all-new-migratolease-Note-Draft#all-new-migrator
@@ -138,6 +138,7 @@ func migrateModels() error {
 		&models.UserSetting{},
 		&config.Setting{},
 		&models.Session{},
+		&models.TemplateRepo{},
 	}
 
 	for _, v := range dbObjects {

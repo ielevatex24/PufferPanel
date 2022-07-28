@@ -41,8 +41,8 @@ func (ss *Session) Validate(token string) (*models.Session, error) {
 	session := &models.Session{Token: token}
 	err := ss.DB.Preload("Client").Preload("User").Preload("Server").Where(session).Find(session).Error
 
-	//validate this session is for a client
-	if err == nil && session.ClientId == nil {
+	//validate this session is for a client or user
+	if err == nil && session.ClientId == nil && session.UserId == nil {
 		err = gorm.ErrRecordNotFound
 	}
 
