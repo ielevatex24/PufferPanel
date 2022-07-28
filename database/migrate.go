@@ -60,6 +60,16 @@ func migrate(dbConn *gorm.DB) error {
 			},
 			Rollback: nil,
 		},
+		{
+			ID: "1658926619",
+			Migrate: func(db *gorm.DB) error {
+				return db.Create(&models.TemplateRepo{
+					Name:   "community",
+					Url:    "https://github.com/pufferpanel/templates",
+					Branch: "v2",
+				}).Error
+			},
+		},
 	})
 
 	return m.Migrate()
