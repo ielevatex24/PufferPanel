@@ -44,9 +44,11 @@ require (
 	gorm.io/driver/sqlite v1.2.4
 	gorm.io/driver/sqlserver v1.2.1
 	gorm.io/gorm v1.22.3
+	pault.ag/go/debian v0.12.0
 )
 
 require (
+	github.com/DataDog/zstd v1.4.8 // indirect
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/PuerkitoBio/purell v1.1.0 // indirect
@@ -104,6 +106,7 @@ require (
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
+	github.com/kjk/lzma v0.0.0-20161016003348-3fd93898850d // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
@@ -152,4 +155,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gotest.tools v2.2.0+incompatible // indirect
 	gotest.tools/v3 v3.0.3 // indirect
+	pault.ag/go/topsort v0.0.0-20160530003732-f98d2ad46e1a // indirect
 )

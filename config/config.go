@@ -82,6 +82,7 @@ var defaultSettings = map[string]interface{}{
 	"daemon.data.cache":             "cache",
 	"daemon.data.servers":           "servers",
 	"daemon.data.modules":           "modules",
+	"daemon.data.binaries":          "binaries",
 	"daemon.data.crashLimit":        3,
 	"daemon.data.maxWSDownloadSize": int64(1024 * 1024 * 20),
 }

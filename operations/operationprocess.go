@@ -31,6 +31,7 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/operations/move"
 	"github.com/pufferpanel/pufferpanel/v3/operations/sleep"
 	"github.com/pufferpanel/pufferpanel/v3/operations/spongeforgedl"
+	"github.com/pufferpanel/pufferpanel/v3/operations/steamcmd"
 	"github.com/pufferpanel/pufferpanel/v3/operations/writefile"
 	"github.com/spf13/cast"
 )
@@ -181,6 +182,9 @@ func loadCoreModules() {
 
 	extractFactory := extract.Factory
 	commandMapping[extractFactory.Key()] = extractFactory
+
+	steamcmdFactory := steamcmd.Factory
+	commandMapping[steamcmdFactory.Key()] = steamcmdFactory
 
 	//programFactory := program.Factory
 	//commandMapping[programFactory.Key()] = programFactory
