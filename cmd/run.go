@@ -36,6 +36,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -229,6 +230,13 @@ func daemon(ch chan error) {
 			ch <- err
 			return
 		}
+	}
+
+	//update path to include our binary folder
+	newPath := os.Getenv("PATH")
+	fullPath, _ := filepath.Abs(config.GetString("daemon.data.binaries"))
+	if !strings.Contains(newPath, fullPath) {
+		_ = os.Setenv("PATH", newPath+":"+fullPath)
 	}
 
 	programs.LoadFromFolder()

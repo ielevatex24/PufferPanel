@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"io"
 	"io/fs"
 	"net/http"
@@ -32,7 +31,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"pault.ag/go/debian/deb"
-	"strings"
 	"sync"
 )
 
@@ -56,15 +54,15 @@ func downloadSteamcmd() (err error) {
 	defer downloader.Unlock()
 
 	binaryFolder := filepath.Join(config.GetString("daemon.data.binaries"), "steamcmd")
+	mainCommand := filepath.Join(config.GetString("daemon.data.binaries"), "steamcmd.sh")
 
 	defer func(folder string) {
 		if err != nil {
-			//_ = os.RemoveAll(folder)
+			_ = os.RemoveAll(folder)
 		}
 	}(binaryFolder)
 
-	binary := filepath.Join(binaryFolder, "steamcmd.sh")
-	if _, err = os.Lstat(binary); errors.Is(err, fs.ErrNotExist) {
+	if _, err = os.Lstat(mainCommand); errors.Is(err, fs.ErrNotExist) {
 		err = nil
 
 		//we need to get the binaries and install them
@@ -108,19 +106,12 @@ func downloadSteamcmd() (err error) {
 		if err != nil && !errors.Is(err, &exec.ExitError{}) {
 			return err
 		}
-		out, _ := cmd.CombinedOutput()
-		logging.Debug.Printf("%s", string(out))
 
 		_ = os.RemoveAll(filepath.Join(binaryFolder, "bin"))
+		err = os.Symlink(filepath.Join(binaryFolder, "steamcmd.sh"), mainCommand)
 	}
 
-	newPath := os.Getenv("PATH")
-	fullPath, _ := filepath.Abs(binaryFolder)
-	if !strings.Contains(newPath, fullPath) {
-		_ = os.Setenv("PATH", newPath+":"+fullPath)
-	}
-
-	return nil
+	return err
 }
 
 func extractGz(gzipStream io.Reader, directory string) error {
