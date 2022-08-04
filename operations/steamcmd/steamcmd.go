@@ -17,24 +17,16 @@
 package steamcmd
 
 import (
-	"archive/tar"
-	"bytes"
-	"compress/gzip"
 	"errors"
-	"fmt"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
-	"io"
 	"io/fs"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"pault.ag/go/debian/deb"
 	"sync"
 )
 
-var client = &http.Client{}
 var DownloadLink = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz"
 var DebLink = "http://security.ubuntu.com/ubuntu/pool/main/g/glibc/libc6-i386_2.31-0ubuntu9.7_amd64.deb"
 var PatchelfLink = "https://github.com/NixOS/patchelf/releases/download/0.15.0/patchelf-0.15.0-x86_64.tar.gz"
@@ -44,42 +36,38 @@ var downloader sync.Mutex
 type Steamcmd struct {
 }
 
-func (op Steamcmd) Run(env pufferpanel.Environment) error {
+func (Steamcmd) Run(env pufferpanel.Environment) (err error) {
 	env.DisplayToConsole(true, "Downloading SteamCMD")
-	return downloadSteamcmd()
-}
-
-func downloadSteamcmd() (err error) {
-	downloader.Lock()
-	defer downloader.Unlock()
 
 	binaryFolder := filepath.Join(config.GetString("daemon.data.binaries"), "steamcmd")
 	mainCommand := filepath.Join(config.GetString("daemon.data.binaries"), "steamcmd.sh")
 
-	defer func(folder string) {
-		if err != nil {
-			_ = os.RemoveAll(folder)
-		}
-	}(binaryFolder)
+	downloader.Lock()
+	defer downloader.Unlock()
 
 	if _, err = os.Lstat(mainCommand); errors.Is(err, fs.ErrNotExist) {
-		err = nil
+		//we need to download, but if we can't, we should purge what we downloaded
+		defer func(folder string) {
+			if err != nil {
+				_ = os.RemoveAll(folder)
+			}
+		}(binaryFolder)
 
 		//we need to get the binaries and install them
-		err = downloadTarGz(DownloadLink, binaryFolder)
+		err = pufferpanel.HttpGetTarGz(DownloadLink, binaryFolder)
 		if err != nil {
-			return err
+			return
 		}
 
 		//now... get deps we need to merge with this
-		err = downloadTarGz(PatchelfLink, binaryFolder)
+		err = pufferpanel.HttpGetTarGz(PatchelfLink, binaryFolder)
 		if err != nil {
-			return err
+			return
 		}
 
-		err = downloadDeb(DebLink, binaryFolder)
+		err = pufferpanel.HttpDownloadDeb(DebLink, binaryFolder)
 		if err != nil {
-			return err
+			return
 		}
 
 		//clean up deb files that we really don't need....
@@ -104,119 +92,12 @@ func downloadSteamcmd() (err error) {
 		cmd.Dir = binaryFolder
 		err = cmd.Run()
 		if err != nil && !errors.Is(err, &exec.ExitError{}) {
-			return err
+			return
 		}
 
 		_ = os.RemoveAll(filepath.Join(binaryFolder, "bin"))
 		err = os.Symlink(filepath.Join(binaryFolder, "steamcmd.sh"), mainCommand)
 	}
 
-	return err
-}
-
-func extractGz(gzipStream io.Reader, directory string) error {
-	uncompressedStream, err := gzip.NewReader(gzipStream)
-	if err != nil {
-		return err
-	}
-	defer uncompressedStream.Close()
-	return extractTar(uncompressedStream, directory)
-}
-
-func extractTar(stream io.Reader, directory string) error {
-	err := os.MkdirAll(directory, 0755)
-	if err != nil {
-		return err
-	}
-
-	var tarReader *tar.Reader
-	if r, isGood := stream.(*tar.Reader); isGood {
-		tarReader = r
-	} else {
-		tarReader = tar.NewReader(stream)
-	}
-
-	for true {
-		header, err := tarReader.Next()
-
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return err
-		}
-
-		switch header.Typeflag {
-		case tar.TypeDir:
-			if err := os.MkdirAll(filepath.Join(directory, header.Name), 0755); err != nil {
-				return err
-			}
-		case tar.TypeSymlink:
-			continue
-		case tar.TypeReg:
-			if err := os.MkdirAll(filepath.Join(directory, filepath.Dir(header.Name)), 0755); err != nil {
-				return err
-			}
-			outFile, err := os.Create(filepath.Join(directory, header.Name))
-			if err != nil {
-				return err
-			}
-			if _, err := io.Copy(outFile, tarReader); err != nil {
-				_ = outFile.Close()
-				return err
-			}
-			_ = outFile.Close()
-			err = os.Chmod(filepath.Join(directory, header.Name), header.FileInfo().Mode())
-			if err != nil {
-				return err
-			}
-		default:
-			return errors.New(fmt.Sprintf("uknown type: %s in %s", string([]byte{header.Typeflag}), header.Name))
-		}
-	}
-	return nil
-}
-
-func extractDeb(stream io.ReaderAt, directory string) error {
-	file, err := deb.Load(stream, directory)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	return extractTar(file.Data, directory)
-}
-
-func downloadTarGz(link, folder string) error {
-	response, err := client.Get(link)
-	defer response.Body.Close()
-	if err != nil {
-		return err
-	}
-
-	err = extractGz(response.Body, folder)
-	return err
-}
-
-func downloadDeb(link, folder string) error {
-	response, err := client.Get(link)
-	defer response.Body.Close()
-	if err != nil {
-		return err
-	}
-
-	buff := bytes.NewBuffer([]byte{})
-	_, err = io.Copy(buff, response.Body)
-	_ = response.Body.Close()
-
-	if err != nil {
-		return err
-	}
-
-	reader := bytes.NewReader(buff.Bytes())
-
-	err = extractDeb(reader, folder)
-	return err
+	return
 }
