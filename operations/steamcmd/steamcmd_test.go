@@ -14,7 +14,7 @@
  limitations under the License.
 */
 
-package javadl
+package steamcmd
 
 import (
 	"github.com/pufferpanel/pufferpanel/v3/config"
@@ -24,15 +24,14 @@ import (
 	"testing"
 )
 
-func Test_downloadJava(t *testing.T) {
+func Test_downloadSteamcmd(t *testing.T) {
 	tests := []struct {
 		name    string
 		wantErr bool
 		version string
 	}{
 		{
-			version: "17",
-			name:    "download java 17",
+			name:    "download steamcmd",
 			wantErr: false,
 		},
 	}
@@ -41,13 +40,13 @@ func Test_downloadJava(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := JavaDl{Version: tt.version}
+			op := Steamcmd{}
 			if err := op.Run(&test.Environment{}); (err != nil) != tt.wantErr {
-				t.Errorf("downloadJava() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("downloadSteamcmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			_, err := exec.LookPath("java" + op.Version)
+			_, err := exec.LookPath("steamcmd.sh")
 			if err != nil {
-				t.Errorf("downloadJava() failed to add to path %v", err)
+				t.Errorf("downloadSteamcmd() failed to add to path %v", err)
 			}
 		})
 	}

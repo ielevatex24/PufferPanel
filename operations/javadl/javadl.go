@@ -22,8 +22,8 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -38,12 +38,9 @@ type JavaDl struct {
 	Version string
 }
 
-func (op JavaDl) Run(env pufferpanel.Environment) error {
+func (op JavaDl) Run(env pufferpanel.Environment) (err error) {
 	env.DisplayToConsole(true, "Downloading Java "+op.Version)
-	return op.downloadJava()
-}
 
-func (op JavaDl) downloadJava() (err error) {
 	downloader.Lock()
 	defer downloader.Unlock()
 
@@ -51,14 +48,22 @@ func (op JavaDl) downloadJava() (err error) {
 	mainCommand := filepath.Join(config.GetString("daemon.data.binaries"), "java"+op.Version)
 	mainCCommand := filepath.Join(config.GetString("daemon.data.binaries"), "javac"+op.Version)
 
-	_, err1 := os.Lstat(mainCommand)
-	_, err2 := os.Lstat(mainCCommand)
+	_, err = exec.LookPath("java" + op.Version)
+	if err == nil {
+		_, err = exec.LookPath("java" + op.Version)
+	}
 
-	if errors.Is(err1, fs.ErrNotExist) || errors.Is(err2, fs.ErrNotExist) {
+	if errors.Is(err, exec.ErrNotFound) {
 		var file File
 		file, err = op.callAdoptiumApi()
 		if err != nil {
 			return err
+		}
+
+		//cleanup the existing dir
+		err = os.RemoveAll(filepath.Join(rootBinaryFolder, file.ReleaseName))
+		if err != nil {
+			return
 		}
 
 		url := file.Binaries[0].Package.Link
@@ -74,10 +79,16 @@ func (op JavaDl) downloadJava() (err error) {
 			return err
 		}
 
+		_ = os.Remove(mainCommand)
+		_ = os.Remove(mainCCommand)
+
+		logging.Debug.Printf("Adding to path: %s\n", mainCommand)
 		err = os.Symlink(filepath.Join(rootBinaryFolder, file.ReleaseName, "bin", "java"), mainCommand)
 		if err != nil {
 			return
 		}
+
+		logging.Debug.Printf("Adding to path: %s\n", mainCCommand)
 		err = os.Symlink(filepath.Join(rootBinaryFolder, file.ReleaseName, "bin", "javac"), mainCCommand)
 		if err != nil {
 			return
