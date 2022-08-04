@@ -34,7 +34,6 @@ var atLocker = &sync.RWMutex{}
 var daemonToken string
 var lastRefresh time.Time
 var expiresIn int64
-var client = &http.Client{}
 
 func RefreshToken() bool {
 	atLocker.Lock()
@@ -68,7 +67,7 @@ func RefreshToken() bool {
 	request.Header.Add("Authorization", "Bearer "+daemonToken)
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	request.Header.Add("Content-Length", strconv.Itoa(len(encodedData)))
-	response, err := client.Do(request)
+	response, err := pufferpanel.Http().Do(request)
 	defer pufferpanel.CloseResponse(response)
 	if err != nil {
 		logging.Error.Printf("error talking to auth server: %s", err)
