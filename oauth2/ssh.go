@@ -54,7 +54,7 @@ func validateSSH(username string, password string, recurse bool) (*ssh.Permissio
 	request.Header.Add("Content-Type", binding.MIMEPOSTForm)
 	request.Header.Add("Content-Length", strconv.Itoa(len(encodedData)))
 
-	response, err := client.Do(request)
+	response, err := pufferpanel.Http().Do(request)
 	defer pufferpanel.CloseResponse(response)
 	if err != nil {
 		logging.Error.Printf("error talking to auth server: %s", err)
