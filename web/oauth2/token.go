@@ -26,6 +26,8 @@ import (
 	"time"
 )
 
+const expiresIn = int64(time.Hour / time.Second)
+
 func registerTokens(g *gin.RouterGroup) {
 	g.POST("/token", panelmiddleware.NeedsDatabase, handleTokenRequest)
 	g.OPTIONS("/token", response.CreateOptions("POST"))
@@ -90,7 +92,7 @@ func handleTokenRequest(c *gin.Context) {
 				AccessToken: token,
 				TokenType:   "Bearer",
 				Scope:       string(pufferpanel.ScopeOAuth2Auth),
-				ExpiresIn:   int64(time.Hour),
+				ExpiresIn:   expiresIn,
 			})
 			return
 		}
@@ -178,7 +180,7 @@ func handleTokenRequest(c *gin.Context) {
 				AccessToken: token,
 				TokenType:   "Bearer",
 				Scope:       strings.Join(mappedScopes, " "),
-				ExpiresIn:   int64(time.Hour),
+				ExpiresIn:   expiresIn,
 			})
 		}
 	default:
