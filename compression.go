@@ -55,20 +55,34 @@ func ExtractTar(stream io.Reader, directory string) error {
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			if err := os.MkdirAll(filepath.Join(directory, header.Name), 0755); err != nil {
+			if err = os.MkdirAll(filepath.Join(directory, header.Name), 0755); err != nil {
 				return err
 			}
 		case tar.TypeSymlink:
-			continue
-		case tar.TypeReg:
-			if err := os.MkdirAll(filepath.Join(directory, filepath.Dir(header.Name)), 0755); err != nil {
+			if err = os.MkdirAll(filepath.Join(directory, filepath.Dir(header.Name)), 0755); err != nil {
 				return err
 			}
-			outFile, err := os.Create(filepath.Join(directory, header.Name))
+
+			//symlinks suck... so much
+			sourceFile := filepath.Join(directory, header.Name)
+			targetFile := header.Linkname
+			if strings.HasPrefix(header.Linkname, "/") {
+				targetFile = filepath.Join(directory, strings.TrimPrefix(header.Linkname, "/"))
+			}
+
+			if err = os.Symlink(targetFile, sourceFile); err != nil {
+				return err
+			}
+		case tar.TypeReg:
+			if err = os.MkdirAll(filepath.Join(directory, filepath.Dir(header.Name)), 0755); err != nil {
+				return err
+			}
+			var outFile *os.File
+			outFile, err = os.Create(filepath.Join(directory, header.Name))
 			if err != nil {
 				return err
 			}
-			if _, err := io.Copy(outFile, tarReader); err != nil {
+			if _, err = io.Copy(outFile, tarReader); err != nil {
 				_ = outFile.Close()
 				return err
 			}
@@ -81,6 +95,7 @@ func ExtractTar(stream io.Reader, directory string) error {
 			return errors.New(fmt.Sprintf("uknown type: %s in %s", string([]byte{header.Typeflag}), header.Name))
 		}
 	}
+
 	return nil
 }
 

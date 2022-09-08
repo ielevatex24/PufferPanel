@@ -17,10 +17,7 @@
 package steamcmd
 
 import (
-	"github.com/pufferpanel/pufferpanel/v3/config"
 	test "github.com/pufferpanel/pufferpanel/v3/testing"
-	"os"
-	"os/exec"
 	"testing"
 )
 
@@ -29,24 +26,22 @@ func Test_downloadSteamcmd(t *testing.T) {
 		name    string
 		wantErr bool
 		version string
+		args    []string
 	}{
 		{
 			name:    "download steamcmd",
 			wantErr: false,
+			args:    []string{},
 		},
 	}
 
-	_ = os.Setenv("PATH", os.Getenv("PATH")+":"+config.GetString("daemon.data.binaries"))
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := Steamcmd{}
-			if err := op.Run(&test.Environment{}); (err != nil) != tt.wantErr {
+			op := SteamGameDl{}
+
+			env := test.CreateEnvironment()
+			if err := op.Run(env); (err != nil) != tt.wantErr {
 				t.Errorf("downloadSteamcmd() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			_, err := exec.LookPath("steamcmd.sh")
-			if err != nil {
-				t.Errorf("downloadSteamcmd() failed to add to path %v", err)
 			}
 		})
 	}

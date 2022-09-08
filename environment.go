@@ -86,7 +86,7 @@ type ExecutionData struct {
 	Arguments        []string
 	Environment      map[string]string
 	WorkingDirectory string
-	Callback         func(graceful bool)
+	Callback         func(exitCode int)
 }
 
 type ExecutionFunction func(steps ExecutionData) (err error)

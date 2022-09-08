@@ -1,26 +1,29 @@
-//go:build !windows
-// +build !windows
+//go:build windows
+// +build windows
 
 /*
- Copyright 2020 Padduck, LLC
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-  	http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+ Copyright 2016 Padduck, LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ 	http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
 */
 
-package test
+package standard
 
 import (
 	"fmt"
-	"github.com/creack/pty"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v3/messages"
 	"github.com/shirou/gopsutil/process"
 	"github.com/spf13/cast"
 	"io"
@@ -41,16 +44,16 @@ type Environment struct {
 
 func CreateEnvironment() *Environment {
 	t := &Environment{
-		BaseEnvironment: &pufferpanel.BaseEnvironment{Type: "tty"},
+		BaseEnvironment: &pufferpanel.BaseEnvironment{Type: "standard"},
 	}
-	t.BaseEnvironment.ExecutionFunction = t.ttyExecuteAsync
+	t.BaseEnvironment.ExecutionFunction = t.standardExecuteAsync
 	t.BaseEnvironment.WaitFunction = t.WaitForMainProcess
 	t.Wait = &sync.WaitGroup{}
 	return t
 }
 
-func (t *Environment) ttyExecuteAsync(steps pufferpanel.ExecutionData) (err error) {
-	running, err := t.IsRunning()
+func (s *Environment) standardExecuteAsync(steps pufferpanel.ExecutionData) (err error) {
+	running, err := s.IsRunning()
 	if err != nil {
 		return
 	}
@@ -58,38 +61,45 @@ func (t *Environment) ttyExecuteAsync(steps pufferpanel.ExecutionData) (err erro
 		err = pufferpanel.ErrProcessRunning
 		return
 	}
-	t.Wait.Wait()
+	s.Wait.Wait()
+	s.Wait.Add(1)
+	s.mainProcess = exec.Command(steps.Command, steps.Arguments...)
+	s.mainProcess.Dir = path.Join(s.GetRootDirectory(), steps.WorkingDirectory)
 
-	pr := exec.Command(steps.Command, steps.Arguments...)
-	pr.Dir = path.Join(t.GetRootDirectory(), steps.WorkingDirectory)
-	/*for _, v := range os.Environ() {
+	for _, v := range os.Environ() {
 		if !strings.HasPrefix(v, "PUFFER_") {
-			pr.Env = append(pr.Env, v)
+			s.mainProcess.Env = append(s.mainProcess.Env, v)
 		}
-	}*/
-	pr.Env = append(pr.Env, "HOME="+t.GetRootDirectory(), "TERM=xterm-256color")
-	for k, v := range steps.Environment {
-		pr.Env = append(pr.Env, fmt.Sprintf("%s=%s", k, v))
 	}
-
-	wrapper := t.CreateWrapper()
-	t.Wait.Add(1)
-	pr.SysProcAttr = &syscall.SysProcAttr{Setctty: true, Setsid: true}
-	t.mainProcess = pr
-	t.DisplayToConsole(true, "Starting process: %s %s", t.mainProcess.Path, strings.Join(t.mainProcess.Args[1:], " "))
-
-	tty, err := pty.Start(pr)
+	s.mainProcess.Env = append(s.mainProcess.Env, "HOME="+s.GetRootDirectory(), "TERM=xterm-256color")
+	for k, v := range steps.Environment {
+		s.mainProcess.Env = append(s.mainProcess.Env, fmt.Sprintf("%s=%s", k, v))
+	}
+	wrapper := s.CreateWrapper()
+	s.mainProcess.Stdout = wrapper
+	s.mainProcess.Stderr = wrapper
+	pipe, err := s.mainProcess.StdinPipe()
 	if err != nil {
 		return
 	}
+	s.stdInWriter = pipe
+	logging.Info.Printf("Starting process: %s %s", s.mainProcess.Path, strings.Join(s.mainProcess.Args[1:], " "))
+	s.DisplayToConsole(true, "Starting process: %s %s", s.mainProcess.Path, strings.Join(s.mainProcess.Args[1:], " "))
 
-	t.stdInWriter = tty
+	msg := messages.Status{Running: true}
+	_ = s.WSManager.WriteMessage(msg)
 
-	go func(proxy io.Writer) {
-		_, _ = io.Copy(proxy, tty)
-	}(wrapper)
+	err = s.mainProcess.Start()
+	if err != nil && err.Error() != "exit status 1" {
+		msg := messages.Status{Running: false}
+		_ = s.WSManager.WriteMessage(msg)
+		logging.Info.Printf("Process failed to start: %s", err)
+		return
+	} else {
+		logging.Info.Printf("Process started (%d)", s.mainProcess.Process.Pid)
+	}
 
-	go t.handleClose(steps.Callback)
+	go s.handleClose(steps.Callback)
 	return
 }
 
@@ -224,5 +234,5 @@ func (*Environment) DisplayToConsole(prefix bool, msg string, data ...interface{
 }
 
 func (*Environment) GetRootDirectory() string {
-	return "/var/lib/pufferpanel/testing"
+	return "C:\\Temp\\PufferPanel\\testing"
 }

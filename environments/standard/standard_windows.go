@@ -190,18 +190,18 @@ func (s *standard) SendCode(code int) error {
 	return s.mainProcess.Process.Signal(syscall.Signal(code))
 }
 
-func (s *standard) handleClose(callback func(graceful bool)) {
+func (s *standard) handleClose(callback func(exitCode int)) {
 	err := s.mainProcess.Wait()
 	s.Wait.Done()
 
 	msg := messages.Status{Running: false}
 	_ = s.WSManager.WriteMessage(msg)
 
-	var graceful bool
+	var code int
 	if s.mainProcess == nil || s.mainProcess.ProcessState == nil || err != nil {
-		graceful = false
+		code = 1
 	} else {
-		graceful = s.mainProcess.ProcessState.Success()
+		code = s.mainProcess.ProcessState.ExitCode()
 	}
 
 	if s.mainProcess != nil && s.mainProcess.Process != nil {
@@ -212,6 +212,6 @@ func (s *standard) handleClose(callback func(graceful bool)) {
 	s.stdInWriter = nil
 
 	if callback != nil {
-		callback(graceful)
+		callback(code)
 	}
 }

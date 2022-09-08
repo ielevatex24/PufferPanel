@@ -18,7 +18,6 @@ package steamcmd
 
 import (
 	"github.com/pufferpanel/pufferpanel/v3"
-	"runtime"
 )
 
 type OperationFactory struct {
@@ -26,19 +25,13 @@ type OperationFactory struct {
 }
 
 func (of OperationFactory) Key() string {
-	return "steamcmd"
+	return "steamgamedl"
 }
 func (of OperationFactory) Create(op pufferpanel.CreateOperation) (pufferpanel.Operation, error) {
-	//we only support steamcmd on AMD64
-	if runtime.GOARCH != "amd64" {
-		return nil, pufferpanel.ErrUnsupportedArch(runtime.GOARCH, "amd64")
+	o := SteamGameDl{
+		AppId: op.OperationArgs["appId"].(string),
 	}
-
-	if runtime.GOOS != "linux" {
-		return nil, pufferpanel.ErrUnsupportedOS(runtime.GOOS, "linux")
-	}
-
-	return Steamcmd{}, nil
+	return o, nil
 }
 
 var Factory OperationFactory

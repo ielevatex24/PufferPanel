@@ -184,14 +184,14 @@ func (t *tty) SendCode(code int) error {
 	return t.mainProcess.Process.Signal(syscall.Signal(code))
 }
 
-func (t *tty) handleClose(callback func(graceful bool)) {
+func (t *tty) handleClose(callback func(exitCode int)) {
 	err := t.mainProcess.Wait()
 
-	var success bool
+	var code int
 	if t.mainProcess == nil || t.mainProcess.ProcessState == nil || err != nil {
-		success = false
+		code = 1
 	} else {
-		success = t.mainProcess.ProcessState.Success()
+		code = t.mainProcess.ProcessState.ExitCode()
 	}
 
 	if t.mainProcess != nil && t.mainProcess.Process != nil {
@@ -204,6 +204,6 @@ func (t *tty) handleClose(callback func(graceful bool)) {
 	_ = t.WSManager.WriteMessage(msg)
 
 	if callback != nil {
-		callback(success)
+		callback(code)
 	}
 }

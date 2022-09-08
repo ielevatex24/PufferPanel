@@ -106,6 +106,7 @@ func (d *docker) dockerExecuteAsync(steps pufferpanel.ExecutionData) error {
 	go func() {
 		defer d.connection.Close()
 		wrapper := d.CreateWrapper()
+
 		_, _ = io.Copy(wrapper, d.connection.Reader)
 		//because we use the auto-delete, we don't manually stop the container
 		//c, _ := d.getClient()
@@ -122,7 +123,11 @@ func (d *docker) dockerExecuteAsync(steps pufferpanel.ExecutionData) error {
 		_ = d.WSManager.WriteMessage(msg)
 
 		if steps.Callback != nil {
-			steps.Callback(err == nil)
+			code := 0
+			if err != nil {
+				code = 1
+			}
+			steps.Callback(code)
 		}
 	}()
 
