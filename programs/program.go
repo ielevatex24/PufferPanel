@@ -448,13 +448,14 @@ func (p *Program) GetNetwork() string {
 	return ip + ":" + port
 }
 
-func (p *Program) afterExit(graceful bool) {
-	if graceful {
+func (p *Program) afterExit(exitCode int) {
+	if exitCode == 0 {
 		p.CrashCounter = 0
 	}
 
 	mapping := p.DataToMap()
-	mapping["success"] = graceful
+	mapping["success"] = exitCode == 0
+	mapping["exitCode"] = exitCode
 
 	processes, err := operations.GenerateProcess(p.Execution.PostExecution, p.RunningEnvironment, mapping, p.Execution.EnvironmentVariables)
 	if err != nil {
@@ -476,9 +477,9 @@ func (p *Program) afterExit(graceful bool) {
 		return
 	}
 
-	if graceful && p.Execution.AutoRestartFromGraceful {
+	if exitCode == 0 && p.Execution.AutoRestartFromGraceful {
 		StartViaService(p)
-	} else if !graceful && p.Execution.AutoRestartFromCrash && p.CrashCounter < config.GetInt("daemon.data.crashLimit") {
+	} else if exitCode != 0 && p.Execution.AutoRestartFromCrash && p.CrashCounter < config.GetInt("daemon.data.crashLimit") {
 		p.CrashCounter++
 		StartViaService(p)
 	}
