@@ -14,7 +14,7 @@
  limitations under the License.
 */
 
-package steamcmd
+package steamgamedl
 
 import (
 	test "github.com/pufferpanel/pufferpanel/v3/testing"

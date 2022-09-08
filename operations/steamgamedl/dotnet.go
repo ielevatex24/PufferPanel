@@ -1,6 +1,6 @@
 //go:build !windows
 
-package steamcmd
+package steamgamedl
 
 import (
 	"os/exec"
