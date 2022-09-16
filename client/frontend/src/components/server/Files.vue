@@ -6,6 +6,7 @@ import Btn from '@/components/ui/Btn.vue'
 import Icon from '@/components/ui/Icon.vue'
 import Loader from '@/components/ui/Loader.vue'
 import Overlay from '@/components/ui/Overlay.vue'
+import Editor, { skipDownload } from './files/Editor.vue'
 import Upload from './files/Upload.vue'
 import TextField from '@/components/ui/TextField.vue'
 
@@ -54,7 +55,7 @@ function getCurrentPath() {
 
 async function openFile(f, overrideWarn = false) {
   if (f.isFile) {
-    if (!overrideWarn && f.size > 30 * Math.pow(2, 20)) {
+    if (!skipDownload(f) && !overrideWarn && f.size > 30 * Math.pow(2, 20)) {
       fileSizeWarnSubject.value = f
       fileSizeWarn.value = true
       return
@@ -63,8 +64,8 @@ async function openFile(f, overrideWarn = false) {
     fileSizeWarn.value = false
     loading.value = true
     const path = getCurrentPath() + `/${f.name}`
-    const content = await props.server.getFile(path, true)
-    file.value = { name: f.name, content }
+    const content = skipDownload(f) ? null : await props.server.getFile(path, true)
+    file.value = { ...f, content, url: props.server.getFileUrl(path) }
     editorOpen.value = true
     loading.value = false
   } else {
@@ -290,12 +291,13 @@ function trackFileEl(index) {
       <loader />
     </overlay>
     <overlay v-model="editorOpen" class="editor">
-      <div class="overlay-header">
+      <!--<div class="overlay-header">
         <h1 class="title" v-text="file.name" />
         <btn variant="text" @click="saveFile()"><icon name="save" /> {{ t('common.Save') }}</btn>
         <btn v-hotkey="'Escape'" variant="icon" @click="editorOpen = false"><icon name="close" /></btn>
       </div>
-      <ace id="file-editor" v-model="file.content" class="file-editor" :file="file.name" theme="monokai" />
+      <ace id="file-editor" v-model="file.content" class="file-editor" :file="file.name" theme="monokai" />-->
+      <editor v-if="file" v-model="file" @save="saveFile()" @close="editorOpen = false" />
     </overlay>
   </div>
 </template>

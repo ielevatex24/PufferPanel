@@ -125,6 +125,7 @@ onMounted(async () => {
   window.addEventListener('resize', onResize)
   events.on('confirm', handleConfirm)
 
+  document.documentElement.style.setProperty('--inner-height', `${window.innerHeight}px`)
   allowSidebar.value = !route.meta.noAuth
   setInterval(() => {
     if (api.auth.isLoggedIn()) api.auth.reauth()
@@ -164,6 +165,8 @@ function onResize() {
   }
 
   lastWidth = window.innerWidth
+
+  document.documentElement.style.setProperty('--inner-height', `${window.innerHeight}px`)
 }
 
 function maybeCloseSidebar() {
