@@ -34,6 +34,15 @@
     "generic": "Create a directory",
     "formatted": "Create directory {target}"
   },
+  "steamgamedl": {
+    "generic": "Install from Steam",
+    "formatted": "Install Steam App ID {appId}",
+    "appId": "Steam App ID"
+  },
+  "javadl": {
+    "generic": "Install Java",
+    "formatted": "Install Java {version}"
+  },
   "forgedl": {
     "generic": "Download Minecraft Forge",
     "formatted": "Download Minecraft Forge"

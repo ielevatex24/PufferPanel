@@ -87,6 +87,21 @@ export const operators = {
       default: ''
     }
   ],
+  steamgamedl: [
+    {
+      name: 'appId',
+      type: 'text',
+      default: ''
+    }
+  ],
+  javadl: [
+    {
+      name: 'version',
+      type: 'text',
+      label: 'templates.Version',
+      default: ''
+    }
+  ],
   mojangdl: [
     {
       name: 'version',
