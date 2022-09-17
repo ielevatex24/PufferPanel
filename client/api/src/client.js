@@ -55,9 +55,20 @@ export class ApiClient {
     throw result
   }
 
+  _enhanceHeaders(headers) {
+    const token = this.auth.getToken()
+    if (token) {
+      return {
+        ...headers,
+        Authorization: 'Bearer ' + token
+      }
+    }
+    return headers
+  }
+
   async get(url, params = {}, headers = {}, options = {}) {
     try {
-      return await this._axios.get(this._host + url, { params, ...options, headers: { ...headers, Authorization: 'Bearer ' + this.auth.getToken() } })
+      return await this._axios.get(this._host + url, { params, ...options, headers: this._enhanceHeaders(headers) })
     } catch (e) {
       this._handleError(e)
     }
@@ -65,7 +76,7 @@ export class ApiClient {
 
   async post(url, data, params = {}, headers = {}, options = {}) {
     try {
-      return await this._axios.post(this._host + url, data, { params, ...options, headers: { ...headers, Authorization: 'Bearer ' + this.auth.getToken() } })
+      return await this._axios.post(this._host + url, data, { params, ...options, headers: this._enhanceHeaders(headers) })
     } catch (e) {
       this._handleError(e)
     }
@@ -73,7 +84,7 @@ export class ApiClient {
 
   async put(url, data, params = {}, headers = {}, options = {}) {
     try {
-      return await this._axios.put(this._host + url, data, { params, ...options, headers: { ...headers, Authorization: 'Bearer ' + this.auth.getToken() } })
+      return await this._axios.put(this._host + url, data, { params, ...options, headers: this._enhanceHeaders(headers) })
     } catch (e) {
       this._handleError(e)
     }
@@ -81,7 +92,7 @@ export class ApiClient {
 
   async delete(url, params = {}, headers = {}, options = {}) {
     try {
-      return await this._axios.delete(this._host + url, { params, ...options, headers: { ...headers, Authorization: 'Bearer ' + this.auth.getToken() } })
+      return await this._axios.delete(this._host + url, { params, ...options, headers: this._enhanceHeaders(headers) })
     } catch (e) {
       this._handleError(e)
     }

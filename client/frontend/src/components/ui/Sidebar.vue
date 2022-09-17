@@ -20,8 +20,8 @@ const routes = router.getRoutes().filter(e => {
 
 const mini = ref(localStorage.getItem('sidebar.mini') === 'true')
 
-function logout() {
-  api.auth.logout()
+async function logout() {
+  await api.auth.logout()
   router.push({ name: 'Login' })
   events.emit('logout')
 }

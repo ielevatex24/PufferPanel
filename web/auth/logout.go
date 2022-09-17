@@ -24,5 +24,13 @@ func LogoutPost(c *gin.Context) {
 	}
 
 	_ = ss.Expire(cookie)
+
+	secure := false
+	if c.Request.TLS != nil {
+		secure = true
+	}
+
+	c.SetCookie("puffer_auth", "", 0, "/", "", secure, true)
+	c.SetCookie("puffer_auth_expires", "", 0, "/", "", secure, false)
 	c.Status(http.StatusNoContent)
 }

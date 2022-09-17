@@ -44,7 +44,7 @@ export class AuthApi {
   }
 
   isLoggedIn() {
-    return this.getToken() !== null
+    return this._sessionStore.isLoggedIn()
   }
 
   hasScope(scope) {
@@ -57,7 +57,8 @@ export class AuthApi {
     return false
   }
 
-  logout() {
+  async logout() {
+    await this._api.post('/auth/logout')
     this._sessionStore.deleteSession()
   }
 }

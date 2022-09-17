@@ -65,7 +65,11 @@ func LoginPost(c *gin.Context) {
 	if c.Request.TLS != nil {
 		secure = true
 	}
-	c.SetCookie("puffer_auth", session, int(time.Hour/time.Second), "/", "", secure, false)
+
+	maxAge := int(time.Hour/time.Second)
+
+	c.SetCookie("puffer_auth", session, maxAge, "/", "", secure, true)
+	c.SetCookie("puffer_auth_expires", "", maxAge, "/", "", secure, false)
 
 	c.JSON(http.StatusOK, data)
 }
@@ -116,7 +120,11 @@ func OtpPost(c *gin.Context) {
 	if c.Request.TLS != nil {
 		secure = true
 	}
-	c.SetCookie("puffer_auth", session, int(time.Hour/time.Second), "/", "", secure, true)
+
+	maxAge := int(time.Hour/time.Second)
+
+	c.SetCookie("puffer_auth", session, maxAge, "/", "", secure, true)
+	c.SetCookie("puffer_auth_expires", "", maxAge, "/", "", secure, false)
 
 	c.JSON(http.StatusOK, data)
 }
