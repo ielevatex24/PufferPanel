@@ -59,7 +59,7 @@ func handleInfoRequest(c *gin.Context) {
 	} else {
 		ps := &services.Permission{DB: db}
 
-		perms := []*models.Permissions{}
+		var perms []*models.Permissions
 
 		//if this is a client, we only want their perms
 		//if there is not a hint, we have to do the kitchen sink

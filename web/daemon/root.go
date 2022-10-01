@@ -43,7 +43,7 @@ func RegisterDaemonRoutes(e *gin.RouterGroup) {
 // @Success 200 {object} pufferpanel.PufferdRunning "Service running"
 // @Router /daemon [get]
 func getStatusGET(c *gin.Context) {
-	c.JSON(http.StatusOK, &pufferpanel.PufferdRunning{Message: "pufferd is running"})
+	c.JSON(http.StatusOK, &pufferpanel.PufferdRunning{Message: "daemon is running"})
 }
 
 // @Summary Is daemon up
@@ -61,7 +61,7 @@ func getStatusHEAD(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} daemon.Features "Features"
-// @Router /daemon [head]
+// @Router /daemon/features [get]
 func getFeatures(c *gin.Context) {
 	features := []string{}
 

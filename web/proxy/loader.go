@@ -20,56 +20,85 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
+	"github.com/spf13/cast"
 	"gorm.io/gorm"
 	"net/http"
 	"strings"
 )
+
+var serverProxy = func(c *gin.Context) { proxyRequest(c, true) }
+var nodeProxy = func(c *gin.Context) { proxyRequest(c, false) }
 
 func RegisterRoutes(rg *gin.RouterGroup) {
 	proxy := rg.Group("/daemon", panelmiddleware.AuthMiddleware, panelmiddleware.NeedsDatabase)
 	{
 		g := proxy.Group("/server")
 		{
-			g.Any("/:id", proxyServerRequest)
-			g.Any("/:id/*path", proxyServerRequest)
+			g.Any("/:id", serverProxy)
+			g.Any("/:id/*path", serverProxy)
 		}
 
 		g = proxy.Group("/socket")
 		{
-			g.Any("/:id", proxyServerRequest)
+			g.Any("/:id", serverProxy)
 		}
+	}
+
+	proxy = rg.Group("/node", panelmiddleware.AuthMiddleware, panelmiddleware.NeedsDatabase)
+	{
+		proxy.Any("/:id", nodeProxy)
+		proxy.Any("/:id/*path", nodeProxy)
 	}
 }
 
-func proxyServerRequest(c *gin.Context) {
+func proxyRequest(c *gin.Context, isServer bool) {
 	db := panelmiddleware.GetDatabase(c)
-	ss := &services.Server{DB: db}
 	ns := &services.Node{DB: db}
 
-	serverId := c.Param("id")
-	if serverId == "" {
-		c.AbortWithStatus(http.StatusNotFound)
-		return
-	}
-
 	path := strings.TrimPrefix(c.Request.URL.Path, "/proxy")
+	var node *models.Node
 
-	s, err := ss.Get(serverId)
-	if err != nil && gorm.ErrRecordNotFound != err && response.HandleError(c, err, http.StatusInternalServerError) {
-		return
-	} else if s == nil || s.Identifier == "" {
-		c.AbortWithStatus(http.StatusNotFound)
-		return
+	if isServer {
+		ss := &services.Server{DB: db}
+
+		serverId := c.Param("id")
+		if serverId == "" {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+
+		s, err := ss.Get(serverId)
+		if err != nil && gorm.ErrRecordNotFound != err && response.HandleError(c, err, http.StatusInternalServerError) {
+			return
+		} else if s == nil || s.Identifier == "" {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		node = &s.Node
+	} else {
+		nodeId := c.Param("id")
+		//remove the node's id from the path
+		path = "/daemon" + strings.TrimPrefix(path, "/node/"+nodeId)
+
+		id, err := cast.ToUintE(nodeId)
+		if response.HandleError(c, err, http.StatusBadRequest) {
+			return
+		}
+
+		node, err = ns.Get(id)
+		if response.HandleError(c, err, http.StatusBadRequest) {
+			return
+		}
 	}
 
-	if s.Node.IsLocal() {
+	if node.IsLocal() {
 		c.Request.URL.Path = path
 		pufferpanel.Engine.HandleContext(c)
 	} else {
 		if c.IsWebsocket() {
-			proxySocketRequest(c, path, ns, &s.Node)
+			proxySocketRequest(c, path, ns, node)
 		} else {
-			proxyHttpRequest(c, path, ns, &s.Node)
+			proxyHttpRequest(c, path, ns, node)
 		}
 	}
 
