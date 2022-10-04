@@ -17,6 +17,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"net/http"
@@ -48,4 +49,17 @@ func Recover(c *gin.Context) {
 	}()
 
 	c.Next()
+}
+
+func RequiresPermission(perm pufferpanel.Scope, needsServer bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requiresPermission(c, perm, needsServer)
+	}
+}
+
+func requiresPermission(c *gin.Context, perm pufferpanel.Scope, needsServer bool) {
+	//we need to know what type of "instance" we are
+	if config.PanelEnabled.Value() {
+
+	}
 }

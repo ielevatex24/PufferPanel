@@ -52,12 +52,12 @@ func RegisterRoutes(e *gin.Engine) {
 
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	if config.GetBool("daemon.enable") {
+	if config.DaemonEnabled.Value() {
 		daemon.RegisterDaemonRoutes(e.Group("/daemon"))
 	}
 
-	if config.GetBool("panel.enable") {
-		ClientPath = config.GetString("panel.web.files")
+	if config.PanelEnabled.Value() {
+		ClientPath = config.WebRoot.Value()
 		IndexFile = ClientPath + "/index.html"
 
 		api.RegisterRoutes(e.Group("/api"))
@@ -140,8 +140,8 @@ func webManifest(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, map[string]interface{}{
-		"name":             config.GetString("panel.settings.companyName"),
-		"short_name":       config.GetString("panel.settings.companyName"),
+		"name":             config.CompanyName.Value(),
+		"short_name":       config.CompanyName.Value(),
 		"background_color": "#fff",
 		"display":          "standalone",
 		"scope":            "/",

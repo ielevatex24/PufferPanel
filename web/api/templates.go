@@ -71,7 +71,7 @@ func addRepo(c *gin.Context) {
 func deleteRepo(c *gin.Context) {
 }
 
-// @Summary Get single template
+// @Summary Value single template
 // @Description Gets a template if registered
 // @Accept json
 // @Produce json

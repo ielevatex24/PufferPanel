@@ -46,7 +46,7 @@ func registerSelf(g *gin.RouterGroup) {
 	g.Handle("OPTIONS", "/oauth2/:clientId", response.CreateOptions("DELETE"))
 }
 
-// @Summary Get your user info
+// @Summary Value your user info
 // @Description Gets the user information of the current user
 // @Accept json
 // @Produce json

@@ -16,7 +16,7 @@ func registerUserSettings(g *gin.RouterGroup) {
 	g.Handle("OPTIONS", "", response.CreateOptions("GET", "PUT"))
 }
 
-// @Summary Get a user setting
+// @Summary Value a user setting
 // @Description Gets all settings specific to the current user
 // @Produce json
 // @Success 200 {object} models.UserSettingsView

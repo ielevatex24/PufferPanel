@@ -42,7 +42,7 @@ type SteamGameDl struct {
 
 func (c SteamGameDl) Run(env pufferpanel.Environment) (err error) {
 	env.DisplayToConsole(true, "Downloading game from Steam")
-	rootBinaryFolder := config.GetString("daemon.data.binaries")
+	rootBinaryFolder := config.BinariesFolder.Value()
 
 	err = downloadBinaries(rootBinaryFolder)
 	if err != nil {

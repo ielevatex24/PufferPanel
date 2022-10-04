@@ -61,11 +61,6 @@ func executeRun(cmd *cobra.Command, args []string) {
 }
 
 func internalRun(c chan error, terminate chan bool) {
-	if err := config.LoadConfigFile(""); err != nil {
-		c <- err
-		return
-	}
-
 	logging.Initialize(true)
 	signal.Ignore(syscall.SIGPIPE, syscall.SIGHUP)
 
@@ -87,17 +82,18 @@ func internalRun(c chan error, terminate chan bool) {
 	gin.DefaultErrorWriter = logging.Error.Writer()
 	pufferpanel.Engine = router
 
-	if config.GetBool("panel.enable") {
+	if config.PanelEnabled.Value() {
 		panel(c)
 
-		if config.GetString("panel.sessionKey") == "" {
-			if err := config.Set("panel.sessionKey", securecookie.GenerateRandomKey(32)); err != nil {
+		if config.SessionKey.Value() == "" {
+			k := securecookie.GenerateRandomKey(32)
+			if err := config.SessionKey.Set(hex.EncodeToString(k), true); err != nil {
 				c <- err
 				return
 			}
 		}
 
-		result, err := hex.DecodeString(config.GetString("panel.sessionKey"))
+		result, err := hex.DecodeString(config.SessionKey.Value())
 		if err != nil {
 			c <- err
 			return
@@ -106,14 +102,14 @@ func internalRun(c chan error, terminate chan bool) {
 		router.Use(sessions.Sessions("session", sessionStore))
 	}
 
-	if config.GetBool("daemon.enable") {
+	if config.DaemonEnabled.Value() {
 		daemon(c)
 	}
 
 	web.RegisterRoutes(router)
 
 	go func() {
-		l, err := net.Listen("tcp", config.GetString("web.host"))
+		l, err := net.Listen("tcp", config.WebHost.Value())
 		if err != nil {
 			c <- err
 			return
@@ -158,13 +154,8 @@ func panel(ch chan error) {
 	//if we have the web, then let's use our sftp auth instead
 	sftp.SetAuthorization(&services.DatabaseSFTPAuthorization{})
 
-	err := config.LoadConfigDatabase(database.GetConnector())
-	if err != nil {
-		logging.Error.Printf("Error loading config from database: %s", err.Error())
-	}
-
 	//validate local daemon is configured in this panel
-	if config.GetBool("daemon.enable") {
+	if config.DaemonEnabled.Value() {
 		db, err := database.GetConnection()
 		if err != nil {
 			return
@@ -187,8 +178,8 @@ func panel(ch chan error) {
 				SFTPPort:    5657,
 				Secret:      strings.Replace(uuid.NewV4().String(), "-", "", -1),
 			}
-			nodeHost := config.GetString("web.host")
-			sftpHost := config.GetString("daemon.sftp.host")
+			nodeHost := config.WebHost.Value()
+			sftpHost := config.SftpHost.Value()
 			hostParts := strings.SplitN(nodeHost, ":", 2)
 			sftpParts := strings.SplitN(sftpHost, ":", 2)
 
@@ -234,7 +225,7 @@ func daemon(ch chan error) {
 
 	//update path to include our binary folder
 	newPath := os.Getenv("PATH")
-	fullPath, _ := filepath.Abs(config.GetString("daemon.data.binaries"))
+	fullPath, _ := filepath.Abs(config.BinariesFolder.Value())
 	if !strings.Contains(newPath, fullPath) {
 		_ = os.Setenv("PATH", newPath+":"+fullPath)
 	}

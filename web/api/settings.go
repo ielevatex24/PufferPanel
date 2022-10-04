@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
@@ -17,7 +16,7 @@ func registerSettings(g *gin.RouterGroup) {
 	g.Handle("OPTIONS", "", response.CreateOptions("GET", "PUT"))
 }
 
-// @Summary Get a panel setting
+// @Summary Value a panel setting
 // @Description Gets the value currently being used for the specified config key
 // @Produce json
 // @Success 200 {object} models.SettingResponse
@@ -27,7 +26,8 @@ func getSetting(c *gin.Context) {
 	key := c.Param("key")
 
 	r := &models.SettingResponse{
-		Value: config.GetString(key),
+		//Value: config.GetString(key),
+		Value: key,
 	}
 
 	c.JSON(http.StatusOK, r)
@@ -44,16 +44,16 @@ func getSetting(c *gin.Context) {
 // @Param value body models.ChangeSetting true "The new value for the setting"
 // @Router /api/self [PUT]
 func setSetting(c *gin.Context) {
-	key := c.Param("key")
+	//key := c.Param("key")
 
 	var model models.ChangeSetting
 	if err := c.BindJSON(&model); response.HandleError(c, err, http.StatusBadRequest) {
 		return
 	}
 
-	if err := config.Set(key, model.Value); response.HandleError(c, err, http.StatusBadRequest) {
+	/*if err := config.Set(key, model.Value); response.HandleError(c, err, http.StatusBadRequest) {
 		return
-	}
+	}*/
 
 	c.Status(http.StatusNoContent)
 }
@@ -64,11 +64,11 @@ func setSettings(c *gin.Context) {
 		return
 	}
 
-	for k, v := range settings {
+	/*for k, v := range settings {
 		if err := config.Set(k, v); response.HandleError(c, err, http.StatusInternalServerError) {
 			return
 		}
-	}
+	}*/
 
 	c.Status(http.StatusNoContent)
 }

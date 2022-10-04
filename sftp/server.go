@@ -27,7 +27,6 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/oauth2"
 	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -65,9 +64,9 @@ func runServer() error {
 		},
 	}
 
-	serverKeyFile := config.GetString("daemon.sftp.key")
+	sftpKeyFile := config.SftpKey.Value()
 
-	_, e := os.Stat(serverKeyFile)
+	_, e := os.Stat(sftpKeyFile)
 
 	if e != nil && os.IsNotExist(e) {
 		logging.Info.Printf("Generating new key")
@@ -83,7 +82,7 @@ func runServer() error {
 			Headers: nil,
 			Bytes:   data,
 		}
-		e = ioutil.WriteFile(serverKeyFile, pem.EncodeToMemory(&block), 0700)
+		e = os.WriteFile(sftpKeyFile, pem.EncodeToMemory(&block), 0700)
 		if e != nil {
 			return e
 		}
@@ -93,7 +92,7 @@ func runServer() error {
 
 	logging.Info.Printf("Loading existing key")
 	var data []byte
-	data, e = ioutil.ReadFile(serverKeyFile)
+	data, e = os.ReadFile(sftpKeyFile)
 	if e != nil {
 		return e
 	}
@@ -106,7 +105,7 @@ func runServer() error {
 
 	serverConfig.AddHostKey(hkey)
 
-	bind := config.GetString("daemon.sftp.host")
+	bind := config.SftpHost.Value()
 
 	sftpServer, e = net.Listen("tcp", bind)
 	if e != nil {
@@ -147,7 +146,7 @@ func handleConn(conn net.Conn, serverConfig *ssh.ServerConfig) error {
 	// The incoming Request channel must be serviced.
 	go PrintDiscardRequests(reqs)
 
-	// Service the incoming Channel channel.
+	// Service the incoming channel.
 	for newChannel := range chans {
 		// Channels have a type, depending on the application level
 		// protocol intended. In the case of an SFTP session, this is "subsystem"

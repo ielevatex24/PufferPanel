@@ -1,0 +1,42 @@
+package config
+
+// Global options
+var LogsFolder = asString("logs", "logs")
+var WebHost = asString("web.host", "0.0.0.0:8080")
+
+// Panel options
+var PanelEnabled = asBool("panel.enable", true)
+var DatabaseSessionLength = asInt("panel.database.session", 60)
+var DatabaseDialect = asString("panel.database.dialect", "sqlite3")
+var DatabaseUrl = asString("panel.database.url", "")
+var DatabaseLoggingEnabled = asBool("panel.database.log", false)
+var WebRoot = asString("panel.web.files", "www")
+var EmailTemplateJson = asString("panel.email.templates", "email/emails.json")
+var EmailProvider = asString("panel.email.provider", "")
+var EmailFrom = asString("panel.email.from", "")
+var EmailDomain = asString("panel.email.domain", "")
+var EmailHost = asString("panel.email.host", "")
+var EmailKey = asString("panel.email.key", "")
+var EmailUsername = asString("panel.email.username", "")
+var EmailPassword = asString("panel.email.password", "")
+var CompanyName = asString("panel.settings.companyName", "PufferPanel")
+var DefaultTheme = asString("panel.settings.defaultTheme", "PufferPanel")
+var ThemeSettings = asString("panel.settings.themeSettings", "{}")
+var MasterUrl = asString("panel.settings.masterUrl", "http://localhost:8080")
+var SessionKey = asString("panel.sessionKey", "")
+var RegistrationEnabled = asBool("panel.registrationEnabled", true)
+
+// Daemon options
+var DaemonEnabled = asBool("daemon.enable", true)
+var ConsoleBuffer = asInt("daemon.console.buffer", 50)
+var ConsoleForward = asBool("daemon.console.forward", false)
+var SftpHost = asString("daemon.sftp.host", "0.0.0.0:5657")
+var SftpKey = asString("daemon.sftp.key", "sftp.key")
+var AuthUrl = asString("daemon.auth.url", "http://localhost:8080")
+var ClientId = asString("daemon.auth.clientId", "")
+var ClientSecret = asString("daemon.auth.clientSecret", "")
+var CacheFolder = asString("daemon.data.cache", "")
+var ServersFolder = asString("daemon.data.servers", "")
+var BinariesFolder = asString("daemon.data.binaries", "")
+var CrashLimit = asInt("daemon.data.crashLimit", 3)
+var WebSocketFileLimit = asInt64("daemon.data.maxWSDownloadSize", 1024*1024*20)

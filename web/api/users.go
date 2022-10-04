@@ -40,7 +40,7 @@ func registerUsers(g *gin.RouterGroup) {
 	g.Handle("OPTIONS", "/:id/perms", response.CreateOptions("PUT", "GET"))
 }
 
-// @Summary Get users
+// @Summary Value users
 // @Description Gets users, and allowing for filtering of users. * is a wildcard that can be used for text inputs
 // @Accept json
 // @Produce json
@@ -124,7 +124,7 @@ func createUser(c *gin.Context) {
 	c.JSON(http.StatusOK, resultModel)
 }
 
-// @Summary Get a user
+// @Summary Value a user
 // @Accept json
 // @Produce json
 // @Success 200 {object} models.UserView

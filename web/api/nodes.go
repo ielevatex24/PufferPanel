@@ -41,7 +41,7 @@ func registerNodes(g *gin.RouterGroup) {
 	g.Handle("OPTIONS", "/:id/deployment", response.CreateOptions("GET"))
 }
 
-// @Summary Get nodes
+// @Summary Value nodes
 // @Description Gets all nodes registered to the panel
 // @Accept json
 // @Produce json
@@ -74,7 +74,7 @@ func getAllNodes(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-// @Summary Get node
+// @Summary Value node
 // @Description Gets information about a single node
 // @Accept json
 // @Produce json

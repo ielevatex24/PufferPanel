@@ -14,7 +14,7 @@
  limitations under the License.
 */
 
-package middleware
+package middlewaredaemon
 
 import (
 	"github.com/gin-gonic/gin"

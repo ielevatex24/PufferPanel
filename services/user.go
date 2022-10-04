@@ -182,7 +182,7 @@ func (us *User) StartOtpEnroll(userId uint) (secret string, imageString string, 
 
 	var key *otp.Key
 	key, err = totp.Generate(totp.GenerateOpts{
-		Issuer:      config.GetString("panel.settings.companyName"),
+		Issuer:      config.CompanyName.Value(),
 		AccountName: user.Email,
 	})
 	if err != nil {

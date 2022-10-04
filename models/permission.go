@@ -226,7 +226,7 @@ func (p *Permissions) ShouldDelete() bool {
 
 		typeField := val.Type().Field(i)
 
-		// Get the field tag value.
+		// Value the field tag value.
 		_, exist := typeField.Tag.Lookup("oneOf")
 
 		if !exist {

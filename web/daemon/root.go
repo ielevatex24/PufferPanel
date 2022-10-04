@@ -56,7 +56,7 @@ func getStatusHEAD(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// @Summary Get supported features
+// @Summary Value supported features
 // @Description Gets a list of features supported by the node
 // @Accept json
 // @Produce json

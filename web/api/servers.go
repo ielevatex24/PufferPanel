@@ -61,7 +61,7 @@ func registerServers(g *gin.RouterGroup) {
 	g.Handle("OPTIONS", "/:serverId/oauth2/:clientId", response.CreateOptions("DELETE"))
 }
 
-// @Summary Get servers
+// @Summary Value servers
 // @Description Gets servers, and allowing for filtering of servers. * is a wildcard that can be used for text inputs
 // @Accept json
 // @Produce json
@@ -172,7 +172,7 @@ func searchServers(c *gin.Context) {
 	})
 }
 
-// @Summary Get a server
+// @Summary Value a server
 // @Description Gets a particular server
 // @Accept json
 // @Produce json

@@ -50,7 +50,7 @@ type emailService struct {
 func LoadEmailService() {
 	globalEmailService = &emailService{templates: make(map[string]*emailTemplate)}
 
-	jsonPath := config.GetString("panel.email.templates")
+	jsonPath := config.EmailTemplateJson.Value()
 	parentDir := filepath.Dir(jsonPath)
 	emailDefinition, err := os.Open(jsonPath)
 	if err != nil {
@@ -97,7 +97,7 @@ func GetEmailService() EmailService {
 }
 
 func (es *emailService) SendEmail(to, template string, data map[string]interface{}, async bool) (err error) {
-	provider := config.GetString("panel.email.provider")
+	provider := config.EmailProvider.Value()
 	if provider == "" {
 		return pufferpanel.ErrEmailNotConfigured
 	}
@@ -112,8 +112,8 @@ func (es *emailService) SendEmail(to, template string, data map[string]interface
 		data = make(map[string]interface{})
 	}
 
-	data["COMPANY_NAME"] = config.GetString("panel.settings.companyName")
-	data["MASTER_URL"] = config.GetString("panel.settings.masterUrl")
+	data["COMPANY_NAME"] = config.CompanyName.Value()
+	data["MASTER_URL"] = config.MasterUrl.Value()
 
 	subjectBuilder := &strings.Builder{}
 	err = tmpl.Subject.Execute(subjectBuilder, data)

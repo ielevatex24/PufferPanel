@@ -44,13 +44,13 @@ func RefreshToken() bool {
 		return false
 	}
 
-	clientId := config.GetString("daemon.auth.clientId")
+	clientId := config.ClientId.Value()
 	if clientId == "" {
 		logging.Error.Printf("error talking to auth server: %s", errors.New("client id not specified"))
 		return false
 	}
 
-	clientSecret := config.GetString("daemon.auth.clientSecret")
+	clientSecret := config.ClientSecret.Value()
 	if clientSecret == "" {
 		logging.Error.Printf("error talking to auth server: %s", errors.New("client secret not specified"))
 		return false
@@ -100,7 +100,7 @@ func RefreshIfStale() {
 }
 
 func createRequest(encodedData string) (request *http.Request) {
-	authUrl := config.GetString("daemon.auth.url")
+	authUrl := config.AuthUrl.Value()
 	request, _ = http.NewRequest("POST", authUrl, bytes.NewBufferString(encodedData))
 	return
 }
