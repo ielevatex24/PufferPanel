@@ -2,12 +2,10 @@ package config
 
 import (
 	"github.com/spf13/viper"
-	"sync"
 )
 
 type entry[T ValueType] struct {
-	key   string
-	value T
+	key string
 }
 
 type StringEntry struct {
@@ -27,8 +25,6 @@ type ValueType interface {
 	int | int64 | bool | string
 }
 
-var cache = make(map[string]interface{})
-
 func (se StringEntry) Value() string {
 	return viper.GetString(se.Key())
 }
@@ -47,15 +43,13 @@ func (e entry[T]) Key() string {
 }
 
 func (e entry[T]) Set(value T, save bool) error {
-	e.value = value
+	viper.Set(e.Key(), value)
 
 	if save {
 		return viper.WriteConfig()
 	}
 	return nil
 }
-
-var locker sync.Mutex
 
 func asString(key string, def string) StringEntry {
 	return StringEntry{entry: as[string](key, def)}
@@ -71,16 +65,6 @@ func asInt64(key string, def int64) Int64Entry {
 }
 
 func as[T ValueType](key string, def T) entry[T] {
-	locker.Lock()
-	defer locker.Unlock()
-
-	val, exists := cache[key]
-	if exists {
-		return val.(entry[T])
-	}
-
-	e := entry[T]{key: key, value: def}
-	cache[key] = e
 	viper.SetDefault(key, def)
-	return e
+	return entry[T]{key: key}
 }

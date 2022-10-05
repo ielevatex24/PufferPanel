@@ -179,7 +179,7 @@ func handleConn(conn net.Conn, serverConfig *ssh.ServerConfig) error {
 			}
 		}(requests)
 
-		fs := CreateRequestPrefix(filepath.Join(pufferpanel.ServerFolder, sc.Permissions.Extensions["server_id"]))
+		fs := CreateRequestPrefix(filepath.Join(config.ServersFolder.Value(), sc.Permissions.Extensions["server_id"]))
 
 		server := sftp.NewRequestServer(channel, fs)
 

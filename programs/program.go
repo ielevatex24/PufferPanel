@@ -383,7 +383,7 @@ func (p *Program) IsAutoStart() (isAutoStart bool) {
 func (p *Program) Save() (err error) {
 	logging.Info.Printf("Saving server %s", p.Id())
 
-	file := filepath.Join(pufferpanel.ServerFolder, p.Id()+".json")
+	file := filepath.Join(config.ServersFolder.Value(), p.Id()+".json")
 
 	if !p.valid() {
 		logging.Error.Printf("Server %s contained invalid data, this server is.... broken", p.Identifier)

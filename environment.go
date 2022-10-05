@@ -91,12 +91,6 @@ type ExecutionData struct {
 
 type ExecutionFunction func(steps ExecutionData) (err error)
 
-var ServerFolder string
-
-func InitEnvironment() {
-	ServerFolder = config.ServersFolder.Value()
-}
-
 func (e *BaseEnvironment) Execute(steps ExecutionData) error {
 	err := e.ExecuteAsync(steps)
 	if err != nil {

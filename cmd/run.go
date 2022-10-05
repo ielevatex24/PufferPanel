@@ -49,18 +49,38 @@ var runCmd = &cobra.Command{
 	Run:   executeRun,
 }
 
-func executeRun(cmd *cobra.Command, args []string) {
-	c := make(chan error)
-	term := make(chan bool)
+var webService *manners.GracefulServer
 
-	internalRun(c, term)
-	err := <-c
-	if err != nil {
-		logging.Error.Printf("An error occurred: %s", err.Error())
+func executeRun(cmd *cobra.Command, args []string) {
+	term := make(chan bool, 10)
+
+	internalRun(term)
+	//wait for the termination signal, so we can shut down
+	<-term
+
+	//shut down everything
+	//all of these can be closed regardless of what type of install this is, as they all check if they are even being
+	//used
+	logging.Debug.Printf("stopping http server")
+	if webService != nil {
+		webService.Close()
 	}
+
+	logging.Debug.Printf("stopping sftp server")
+	sftp.Stop()
+
+	logging.Debug.Printf("stopping servers")
+	programs.ShutdownService()
+	for _, p := range programs.GetAll() {
+		_ = p.Stop()
+		p.RunningEnvironment.WaitForMainProcessFor(time.Minute) //wait 60 seconds
+	}
+
+	logging.Debug.Printf("stopping database connections")
+	database.Close()
 }
 
-func internalRun(c chan error, terminate chan bool) {
+func internalRun(terminate chan bool) {
 	logging.Initialize(true)
 	signal.Ignore(syscall.SIGPIPE, syscall.SIGHUP)
 
@@ -83,19 +103,21 @@ func internalRun(c chan error, terminate chan bool) {
 	pufferpanel.Engine = router
 
 	if config.PanelEnabled.Value() {
-		panel(c)
+		panel()
 
 		if config.SessionKey.Value() == "" {
 			k := securecookie.GenerateRandomKey(32)
 			if err := config.SessionKey.Set(hex.EncodeToString(k), true); err != nil {
-				c <- err
+				logging.Error.Printf("error saving session key: %s", err.Error())
+				terminate <- true
 				return
 			}
 		}
 
 		result, err := hex.DecodeString(config.SessionKey.Value())
 		if err != nil {
-			c <- err
+			logging.Error.Printf("error decoding session key: %s", err.Error())
+			terminate <- true
 			return
 		}
 		sessionStore := cookie.NewStore(result)
@@ -103,7 +125,12 @@ func internalRun(c chan error, terminate chan bool) {
 	}
 
 	if config.DaemonEnabled.Value() {
-		daemon(c)
+		err := daemon()
+		if err != nil {
+			logging.Error.Printf("error starting daemon server: %s", err.Error())
+			terminate <- true
+			return
+		}
 	}
 
 	web.RegisterRoutes(router)
@@ -111,44 +138,24 @@ func internalRun(c chan error, terminate chan bool) {
 	go func() {
 		l, err := net.Listen("tcp", config.WebHost.Value())
 		if err != nil {
-			c <- err
+			logging.Error.Printf("error starting http server: %s", err.Error())
+			terminate <- true
 			return
 		}
 
 		logging.Info.Printf("Listening for HTTP requests on %s", l.Addr().String())
-		err = manners.Serve(l, router)
+		webService = manners.NewWithServer(&http.Server{Handler: router})
+		err = webService.Serve(l)
 		if err != nil && err != http.ErrServerClosed {
-			c <- err
+			logging.Error.Printf("error listening for http requests: %s", err.Error())
 			terminate <- true
 		}
-	}()
-
-	go func() {
-		//wait for the termination signal, so we can shut down
-		<-terminate
-
-		//shut down everything
-		//all of these can be closed regardless of what type of install this is, as they all check if they are even being
-		//used
-
-		manners.Close()
-		sftp.Stop()
-		programs.ShutdownService()
-		database.Close()
-
-		for _, p := range programs.GetAll() {
-			_ = p.Stop()
-			p.RunningEnvironment.WaitForMainProcessFor(time.Minute) //wait 60 seconds
-		}
-
-		//return out, the upper layers know how to handle this
-		c <- nil
 	}()
 
 	return
 }
 
-func panel(ch chan error) {
+func panel() {
 	services.LoadEmailService()
 
 	//if we have the web, then let's use our sftp auth instead
@@ -205,21 +212,19 @@ func panel(ch chan error) {
 	}
 }
 
-func daemon(ch chan error) {
+func daemon() error {
 	sftp.Run()
 
-	pufferpanel.InitEnvironment()
 	environments.LoadModules()
 	programs.Initialize()
 
 	var err error
 
-	if _, err = os.Stat(pufferpanel.ServerFolder); os.IsNotExist(err) {
-		logging.Error.Printf("No server directory found, creating")
-		err = os.MkdirAll(pufferpanel.ServerFolder, 0755)
+	if _, err = os.Stat(config.ServersFolder.Value()); os.IsNotExist(err) {
+		logging.Info.Printf("No server directory found, creating")
+		err = os.MkdirAll(config.ServersFolder.Value(), 0755)
 		if err != nil && !os.IsExist(err) {
-			ch <- err
-			return
+			return err
 		}
 	}
 
@@ -244,4 +249,5 @@ func daemon(ch chan error) {
 			}
 		}
 	}
+	return nil
 }

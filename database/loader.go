@@ -145,19 +145,6 @@ func migrateModels() error {
 			return err
 		}
 	}
-
-	dialect := config.DatabaseDialect.Value()
-	if dialect == "" || dialect == "sqlite3" {
-		//SQLite does not support creating FKs like this, so we can't just enable them...
-		/*var res = dbConn.Exec("PRAGMA foreign_keys = ON")
-		if res.RowsAffected == 0 {
-			logging.Error.Println("SQLite does not support FKs")
-		} else {
-			logging.Debug.Printf("%v\n", res.Value)
-		}*/
-		return nil
-	}
-
 	return migrate(dbConn)
 }
 
