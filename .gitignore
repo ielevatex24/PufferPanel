@@ -4,11 +4,12 @@
 .idea/
 *.iml
 .DS_Store
-
+*.jar
 
 logs/
 config.json
 */node_modules/*
+*/dist/*
 vendor/
 client/dist/
 *.pem
