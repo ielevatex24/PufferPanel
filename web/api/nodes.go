@@ -38,6 +38,13 @@ func registerNodes(g *gin.RouterGroup) {
 	g.Handle("DELETE", "/:id", middleware.RequiresPermission(pufferpanel.ScopeNodesEdit, false), deleteNode)
 	g.Handle("OPTIONS", "/:id", response.CreateOptions("PUT", "GET", "DELETE"))
 
+	g.Handle("GET", "/:id/status", panelmiddleware.AuthMiddleware, response.NotImplemented)
+	g.Handle("HEAD", "/:id/status", panelmiddleware.AuthMiddleware, response.NotImplemented)
+	g.Handle("OPTIONS", "/id/status", response.CreateOptions("GET", "HEAD"))
+
+	g.Handle("GET", "/:id/features", panelmiddleware.AuthMiddleware, response.NotImplemented)
+	g.Handle("OPTIONS", "/:id/features", response.CreateOptions("GET"))
+
 	g.Handle("GET", "/:id/deployment", middleware.RequiresPermission(pufferpanel.ScopeNodesDeploy, false), deployNode)
 	g.Handle("OPTIONS", "/:id/deployment", response.CreateOptions("GET"))
 }

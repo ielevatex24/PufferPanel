@@ -22,11 +22,11 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
+	daemon "github.com/pufferpanel/pufferpanel/v3/daemon/entry"
+	"github.com/pufferpanel/pufferpanel/v3/daemon/programs"
 	"github.com/pufferpanel/pufferpanel/v3/database"
-	"github.com/pufferpanel/pufferpanel/v3/environments"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/models"
-	"github.com/pufferpanel/pufferpanel/v3/programs"
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"github.com/pufferpanel/pufferpanel/v3/sftp"
 	"github.com/pufferpanel/pufferpanel/v3/web"
@@ -36,7 +36,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -125,7 +124,7 @@ func internalRun(terminate chan bool) {
 	}
 
 	if config.DaemonEnabled.Value() {
-		err := daemon()
+		err := daemon.Start()
 		if err != nil {
 			logging.Error.Printf("error starting daemon server: %s", err.Error())
 			terminate <- true
@@ -210,44 +209,4 @@ func panel() {
 			}
 		}
 	}
-}
-
-func daemon() error {
-	sftp.Run()
-
-	environments.LoadModules()
-	programs.Initialize()
-
-	var err error
-
-	if _, err = os.Stat(config.ServersFolder.Value()); os.IsNotExist(err) {
-		logging.Info.Printf("No server directory found, creating")
-		err = os.MkdirAll(config.ServersFolder.Value(), 0755)
-		if err != nil && !os.IsExist(err) {
-			return err
-		}
-	}
-
-	//update path to include our binary folder
-	newPath := os.Getenv("PATH")
-	fullPath, _ := filepath.Abs(config.BinariesFolder.Value())
-	if !strings.Contains(newPath, fullPath) {
-		_ = os.Setenv("PATH", newPath+":"+fullPath)
-	}
-
-	programs.LoadFromFolder()
-
-	programs.InitService()
-
-	for _, element := range programs.GetAll() {
-		if element.IsEnabled() {
-			element.GetEnvironment().DisplayToConsole(true, "Daemon has been started\n")
-			if element.IsAutoStart() {
-				logging.Info.Printf("Queued server %s", element.Id())
-				element.GetEnvironment().DisplayToConsole(true, "Server has been queued to start\n")
-				programs.StartViaService(element)
-			}
-		}
-	}
-	return nil
 }

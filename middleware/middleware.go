@@ -18,11 +18,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
+	"github.com/pufferpanel/pufferpanel/v3/daemon/programs"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/oauth2"
-	"github.com/pufferpanel/pufferpanel/v3/programs"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"net/http"
@@ -86,7 +86,7 @@ func requiresPermission(c *gin.Context, perm pufferpanel.Scope, needsServer bool
 		}
 
 		//we now have a user and they are allowed to access something, let's confirm they have server access
-		serverId := c.Param("id")
+		serverId := c.Param("serverId")
 		if needsServer && serverId == "" {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
@@ -174,7 +174,7 @@ func requiresPermission(c *gin.Context, perm pufferpanel.Scope, needsServer bool
 
 		//we can short-cut if this is even going to work by seeing if we have a server request
 		//if we do, validate it's even one we know of
-		serverId := c.Param("id")
+		serverId := c.Param("serverId")
 		if needsServer && serverId != "" {
 			program, err := programs.Get(serverId)
 			if response.HandleError(c, err, http.StatusInternalServerError) {

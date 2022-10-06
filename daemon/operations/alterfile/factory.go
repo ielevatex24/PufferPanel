@@ -11,38 +11,26 @@
   limitations under the License.
 */
 
-package pufferpanel
+package alterfile
 
-type ServerIdResponse struct {
-	Id string `json:"id"`
+import (
+	"github.com/pufferpanel/pufferpanel/v3/daemon"
+)
+
+type OperationFactory struct {
+	daemon.OperationFactory
 }
 
-type ServerStats struct {
-	Cpu    float64 `json:"cpu"`
-	Memory float64 `json:"memory"`
+func (of OperationFactory) Create(op daemon.CreateOperation) (daemon.Operation, error) {
+	file := op.OperationArgs["file"].(string)
+	search := op.OperationArgs["search"].(string)
+	replace := op.OperationArgs["replace"].(string)
+	regex := op.OperationArgs["regex"].(bool)
+	return AlterFile{TargetFile: file, Search: search, Replace: replace, Regex: regex}, nil
 }
 
-type ServerLogs struct {
-	Epoch int64  `json:"epoch"`
-	Logs  string `json:"logs"`
+func (of OperationFactory) Key() string {
+	return "alterfile"
 }
 
-type ServerRunning struct {
-	Running bool `json:"running"`
-}
-
-type ServerData struct {
-	Variables map[string]Variable `json:"data"`
-}
-
-type ServerTasks struct {
-	Tasks map[string]Task `json:"tasks"`
-}
-
-type ServerDataAdmin struct {
-	*Server
-}
-
-type NodeRunning struct {
-	Message string `json:"message"`
-}
+var Factory OperationFactory

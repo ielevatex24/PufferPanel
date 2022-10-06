@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	cors "github.com/itsjamie/gin-cors"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/database"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
@@ -43,8 +44,11 @@ func registerServers(g *gin.RouterGroup) {
 	g.Handle("PUT", "/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersCreate, false), panelmiddleware.HasTransaction, createServer)
 	g.Handle("POST", "/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, createServer)
 	g.Handle("DELETE", "/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersDelete, true), panelmiddleware.HasTransaction, deleteServer)
-	g.Handle("PUT", "/:serverId/name/:name", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, renameServer)
 	g.Handle("OPTIONS", "/:serverId", response.CreateOptions("PUT", "GET", "POST", "DELETE"))
+
+	g.Handle("PUT", "/:serverId/name", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), response.NotImplemented)
+	g.Handle("PUT", "/:serverId/name/:name", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, renameServer)
+	g.Handle("OPTIONS", "/:serverId/name/:name", response.CreateOptions("PUT", "GET"))
 
 	g.Handle("GET", "/:serverId/user", middleware.RequiresPermission(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
 	g.Handle("OPTIONS", "/:serverId/user", response.CreateOptions("GET"))
@@ -60,6 +64,54 @@ func registerServers(g *gin.RouterGroup) {
 
 	g.Handle("DELETE", "/:serverId/oauth2/:clientId", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), deleteOAuth2Client)
 	g.Handle("OPTIONS", "/:serverId/oauth2/:clientId", response.CreateOptions("DELETE"))
+
+	//server-level operations
+	g.Handle("GET", "/:serverId/tasks", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), response.NotImplemented)
+	g.Handle("POST", "/:serverId/tasks", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), response.NotImplemented)
+	g.Handle("PUT", "/:serverId/tasks/:taskId", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), response.NotImplemented)
+	g.Handle("DELETE", "/:serverId/tasks/:taskId", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), response.NotImplemented)
+	g.Handle("OPTIONS", "/:serverId/tasks", response.CreateOptions("GET", "POST", "PUT", "DELETE"))
+
+	g.Handle("POST", "/:serverId/start", middleware.RequiresPermission(pufferpanel.ScopeServersStart, true), response.NotImplemented)
+	g.Handle("OPTIONS", "/:serverId/start", response.CreateOptions("POST"))
+
+	g.Handle("POST", "/:serverId/stop", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), response.NotImplemented)
+	g.Handle("OPTIONS", "/:serverId/stop", response.CreateOptions("POST"))
+
+	g.Handle("POST", "/:serverId/kill", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), response.NotImplemented)
+	g.Handle("OPTIONS", "/:serverId/kill", response.CreateOptions("POST"))
+
+	g.Handle("POST", "/:serverId/install", middleware.RequiresPermission(pufferpanel.ScopeServersInstall, true), response.NotImplemented)
+	g.Handle("OPTIONS", "/:serverId/install", response.CreateOptions("POST"))
+
+	g.Handle("GET", "/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesGet, true), response.NotImplemented)
+	g.Handle("PUT", "/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), response.NotImplemented)
+	g.Handle("DELETE", "/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), response.NotImplemented)
+	g.Handle("POST", "/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), response.NotImplemented)
+	g.Handle("OPTIONS", "/:serverId/file/*filename", response.CreateOptions("GET", "PUT", "DELETE", "POST"))
+
+	g.Handle("GET", "/:serverId/console", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), response.NotImplemented)
+	g.Handle("POST", "/:serverId/console", middleware.RequiresPermission(pufferpanel.ScopeServersConsoleSend, true), response.NotImplemented)
+	g.Handle("OPTIONS", "/:serverId/console", response.CreateOptions("GET", "POST"))
+
+	g.Handle("GET", "/:serverId/stats", middleware.RequiresPermission(pufferpanel.ScopeServersStat, true), response.NotImplemented)
+	g.Handle("OPTIONS", "/:serverId/stats", response.CreateOptions("GET"))
+
+	g.Handle("GET", "/:serverId/status", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), response.NotImplemented)
+	g.Handle("OPTIONS", "/:serverId/status", response.CreateOptions("GET"))
+
+	g.Handle("POST", "/:serverId/archive/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), response.NotImplemented)
+	g.Handle("GET", "/:serverId/extract/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), response.NotImplemented)
+
+	g.Handle("GET", "/:serverId/console/socket", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), cors.Middleware(cors.Config{
+		Origins:     "*",
+		Credentials: true,
+	}), response.NotImplemented)
+	g.Handle("CONNECT", "/:serverId/console/socket", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Credentials", "false")
+	})
+	g.Handle("OPTIONS", "/:serverId/console/socket", response.CreateOptions("GET", "CONNECT"))
 }
 
 // @Summary Value servers

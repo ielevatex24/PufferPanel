@@ -22,9 +22,7 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/web/api"
 	"github.com/pufferpanel/pufferpanel/v3/web/auth"
-	"github.com/pufferpanel/pufferpanel/v3/web/daemon"
 	"github.com/pufferpanel/pufferpanel/v3/web/oauth2"
-	"github.com/pufferpanel/pufferpanel/v3/web/proxy"
 	_ "github.com/pufferpanel/pufferpanel/v3/web/swagger"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
@@ -52,10 +50,6 @@ func RegisterRoutes(e *gin.Engine) {
 
 	e.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	if config.DaemonEnabled.Value() {
-		daemon.RegisterDaemonRoutes(e.Group("/daemon"))
-	}
-
 	if config.PanelEnabled.Value() {
 		ClientPath = config.WebRoot.Value()
 		IndexFile = ClientPath + "/index.html"
@@ -64,8 +58,6 @@ func RegisterRoutes(e *gin.Engine) {
 		e.GET("/manifest.json", webManifest)
 		oauth2.RegisterRoutes(e.Group("/oauth2"))
 		auth.RegisterRoutes(e.Group("/auth"))
-
-		proxy.RegisterRoutes(e.Group("/proxy"))
 
 		css := e.Group("/css")
 		{

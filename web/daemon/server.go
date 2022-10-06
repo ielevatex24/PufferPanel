@@ -22,10 +22,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/itsjamie/gin-cors"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/programs"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/satori/go.uuid"
@@ -44,81 +42,6 @@ var wsupgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
-}
-
-func RegisterServerRoutes(e *gin.RouterGroup) {
-	l := e.Group("/server")
-	{
-		l.PUT("/:id", middleware.RequiresPermission(pufferpanel.ScopeServersCreate, false), CreateServer)
-		l.DELETE("/:id", middleware.RequiresPermission(pufferpanel.ScopeServersDelete, true), DeleteServer)
-		l.GET("/:id", middleware.RequiresPermission(pufferpanel.ScopeServersEditAdmin, true), GetServerAdmin)
-		l.POST("/:id", middleware.RequiresPermission(pufferpanel.ScopeServersEditAdmin, true), EditServerAdmin)
-		l.OPTIONS("/:id", response.CreateOptions("PUT", "DELETE", "GET"))
-
-		l.GET("/:id/data", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), GetServerData)
-		l.POST("/:id/data", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), EditServerData)
-		l.OPTIONS("/:id/data", response.CreateOptions("GET", "POST"))
-
-		l.GET("/:id/tasks", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), GetServerTasks)
-		l.POST("/:id/tasks", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), CreateServerTask)
-		l.PUT("/:id/tasks/:taskId", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), EditServerTask)
-		l.DELETE("/:id/tasks/:taskId", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), DeleteServerTask)
-		l.OPTIONS("/:id/tasks", response.CreateOptions("GET", "POST", "PUT", "DELETE"))
-
-		//l.POST("/:id/tasks/:taskId/run", middleware.OAuth2Handler(pufferpanel.ScopeServersEdit, true), RunServerTask)
-		l.OPTIONS("/:id/tasks/:taskId/run", response.CreateOptions("POST"))
-
-		l.POST("/:id/reload", middleware.RequiresPermission(pufferpanel.ScopeServersEditAdmin, true), ReloadServer)
-		l.OPTIONS("/:id/reload", response.CreateOptions("POST"))
-
-		l.POST("/:id/start", middleware.RequiresPermission(pufferpanel.ScopeServersStart, true), StartServer)
-		l.OPTIONS("/:id/start", response.CreateOptions("POST"))
-
-		l.POST("/:id/stop", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), StopServer)
-		l.OPTIONS("/:id/stop", response.CreateOptions("POST"))
-
-		l.POST("/:id/kill", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), KillServer)
-		l.OPTIONS("/:id/kill", response.CreateOptions("POST"))
-
-		l.POST("/:id/install", middleware.RequiresPermission(pufferpanel.ScopeServersInstall, true), InstallServer)
-		l.OPTIONS("/:id/install", response.CreateOptions("POST"))
-
-		l.GET("/:id/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesGet, true), GetFile)
-		l.PUT("/:id/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), PutFile)
-		l.DELETE("/:id/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), DeleteFile)
-		l.POST("/:id/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), response.NotImplemented)
-		l.OPTIONS("/:id/file/*filename", response.CreateOptions("GET", "PUT", "DELETE", "POST"))
-
-		l.GET("/:id/console", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), GetLogs)
-		l.POST("/:id/console", middleware.RequiresPermission(pufferpanel.ScopeServersConsoleSend, true), PostConsole)
-		l.OPTIONS("/:id/console", response.CreateOptions("GET", "POST"))
-
-		l.GET("/:id/stats", middleware.RequiresPermission(pufferpanel.ScopeServersStat, true), GetStats)
-		l.OPTIONS("/:id/stats", response.CreateOptions("GET"))
-
-		l.GET("/:id/status", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), GetStatus)
-		l.OPTIONS("/:id/status", response.CreateOptions("GET"))
-
-		l.POST("/:id/archive/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), Archive)
-		l.GET("/:id/extract/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), Extract)
-
-	}
-
-	p := e.Group("/socket")
-	{
-		p.GET("/:id", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), cors.Middleware(cors.Config{
-			Origins:     "*",
-			Credentials: true,
-		}), OpenSocket)
-		p.Handle("CONNECT", "/:id", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), func(c *gin.Context) {
-			c.Header("Access-Control-Allow-Origin", "*")
-			c.Header("Access-Control-Allow-Credentials", "false")
-		})
-		p.OPTIONS("/:id", response.CreateOptions("GET"))
-	}
-
-	l.POST("", middleware.RequiresPermission(pufferpanel.ScopeServersCreate, false), CreateServer)
-	l.OPTIONS("", response.CreateOptions("POST"))
 }
 
 // @Summary Starts server

@@ -21,19 +21,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/response"
 	"net/http"
 	"time"
 )
-
-func RegisterDaemonRoutes(e *gin.RouterGroup) {
-	e.GET("", getStatusGET)
-	e.HEAD("", getStatusHEAD)
-	e.Handle("OPTIONS", "", response.CreateOptions("GET", "HEAD"))
-	e.GET("features", getFeatures)
-
-	RegisterServerRoutes(e)
-}
 
 // Root godoc
 // @Summary Is daemon up
