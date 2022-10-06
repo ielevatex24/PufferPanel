@@ -36,8 +36,6 @@ func NeedsDatabase(c *gin.Context) {
 	}
 
 	c.Set("db", db)
-
-	c.Next()
 }
 
 func GetDatabase(c *gin.Context) *gorm.DB {

@@ -76,12 +76,16 @@ func (ps *Permission) GetForClient(id uint) ([]*models.Permissions, error) {
 }
 
 func (ps *Permission) GetForClientAndServer(id uint, serverId *string) (*models.Permissions, error) {
+	if serverId != nil && *serverId == "" {
+		serverId = nil
+	}
+
 	permissions := &models.Permissions{
 		ClientId:         &id,
 		ServerIdentifier: serverId,
 	}
 
-	err := ps.DB.Preload("User").Preload("Server").Where(permissions).FirstOrCreate(permissions).Error
+	err := ps.DB.Preload("User").Preload("Server").Where(permissions).First(permissions).Error
 
 	return permissions, err
 }

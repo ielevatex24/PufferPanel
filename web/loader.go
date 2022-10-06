@@ -153,6 +153,5 @@ func webManifest(c *gin.Context) {
 func setContentType(contentType string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Content-Type", contentType)
-		c.Next()
 	}
 }

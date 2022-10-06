@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
@@ -28,16 +29,16 @@ import (
 )
 
 func registerNodes(g *gin.RouterGroup) {
-	g.Handle("GET", "", panelmiddleware.HasPermission(pufferpanel.ScopeNodesView, false), getAllNodes)
-	g.Handle("POST", "", panelmiddleware.HasPermission(pufferpanel.ScopeNodesEdit, false), createNode)
+	g.Handle("GET", "", middleware.RequiresPermission(pufferpanel.ScopeNodesView, false), getAllNodes)
+	g.Handle("POST", "", middleware.RequiresPermission(pufferpanel.ScopeNodesEdit, false), createNode)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET", "POST"))
 
-	g.Handle("GET", "/:id", panelmiddleware.HasPermission(pufferpanel.ScopeNodesView, false), getNode)
-	g.Handle("PUT", "/:id", panelmiddleware.HasPermission(pufferpanel.ScopeNodesEdit, false), updateNode)
-	g.Handle("DELETE", "/:id", panelmiddleware.HasPermission(pufferpanel.ScopeNodesEdit, false), deleteNode)
+	g.Handle("GET", "/:id", middleware.RequiresPermission(pufferpanel.ScopeNodesView, false), getNode)
+	g.Handle("PUT", "/:id", middleware.RequiresPermission(pufferpanel.ScopeNodesEdit, false), updateNode)
+	g.Handle("DELETE", "/:id", middleware.RequiresPermission(pufferpanel.ScopeNodesEdit, false), deleteNode)
 	g.Handle("OPTIONS", "/:id", response.CreateOptions("PUT", "GET", "DELETE"))
 
-	g.Handle("GET", "/:id/deployment", panelmiddleware.HasPermission(pufferpanel.ScopeNodesDeploy, false), deployNode)
+	g.Handle("GET", "/:id/deployment", middleware.RequiresPermission(pufferpanel.ScopeNodesDeploy, false), deployNode)
 	g.Handle("OPTIONS", "/:id/deployment", response.CreateOptions("GET"))
 }
 

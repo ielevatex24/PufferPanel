@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
+	"github.com/pufferpanel/pufferpanel/v3/oauth2"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"gorm.io/gorm"
@@ -48,7 +49,7 @@ func handleInfoRequest(c *gin.Context) {
 
 	serverId := c.DefaultPostForm("token_type_hint", "")
 
-	infoResponse := &InfoResponse{}
+	infoResponse := &oauth2.TokenInfoResponse{}
 
 	//this token can be one of two types, we need to work out which it is
 	session, err := sessionService.Validate(token)
@@ -111,9 +112,4 @@ func handleInfoRequest(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, infoResponse)
-}
-
-type InfoResponse struct {
-	Active bool   `json:"active"`
-	Scope  string `json:"scope,omitempty"`
 }

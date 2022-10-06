@@ -43,7 +43,6 @@ func AuthMiddleware(c *gin.Context) {
 				}
 			}
 			if !skip {
-				c.Next()
 				return
 			}
 		}
@@ -55,20 +54,19 @@ func AuthMiddleware(c *gin.Context) {
 	}
 
 	ss := services.Session{DB: db}
-
 	var user models.User
 
 	cookie, err := c.Cookie("puffer_auth")
 	if err == http.ErrNoCookie || cookie == "" {
 		//determine if it's an asset, otherwise, we can redirect if it's a GET
 		//dev only requirement?
-		if c.Request.Method == "GET" && strings.Count(c.Request.URL.Path, "/") == 1 {
+		/*if c.Request.Method == "GET" && strings.Count(c.Request.URL.Path, "/") == 1 {
 			for _, v := range assetFiles {
 				if strings.HasSuffix(c.Request.URL.Path, v) {
 					return
 				}
 			}
-		}
+		}*/
 
 		//check for token Auth header
 		authHeader := c.Request.Header.Get("Authorization")
@@ -108,7 +106,6 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	} else {
 		//pull user from the session
-		ss := services.Session{DB: db}
 		sess, err := ss.Validate(cookie)
 
 		if err == gorm.ErrRecordNotFound {
@@ -130,5 +127,4 @@ func AuthMiddleware(c *gin.Context) {
 	}
 
 	c.Set("user", &user)
-	c.Next()
 }

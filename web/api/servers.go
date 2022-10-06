@@ -21,6 +21,7 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/database"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
@@ -34,30 +35,30 @@ import (
 )
 
 func registerServers(g *gin.RouterGroup) {
-	g.Handle("GET", "", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, false), searchServers)
+	g.Handle("GET", "", middleware.RequiresPermission(pufferpanel.ScopeServersView, false), searchServers)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET"))
 
-	g.Handle("POST", "", panelmiddleware.HasPermission(pufferpanel.ScopeServersCreate, false), panelmiddleware.HasTransaction, createServer)
-	g.Handle("GET", "/:serverId", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, true), getServer)
-	g.Handle("PUT", "/:serverId", panelmiddleware.HasPermission(pufferpanel.ScopeServersCreate, false), panelmiddleware.HasTransaction, createServer)
-	g.Handle("POST", "/:serverId", panelmiddleware.HasPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, createServer)
-	g.Handle("DELETE", "/:serverId", panelmiddleware.HasPermission(pufferpanel.ScopeServersDelete, true), panelmiddleware.HasTransaction, deleteServer)
-	g.Handle("PUT", "/:serverId/name/:name", panelmiddleware.HasPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, renameServer)
+	g.Handle("POST", "", middleware.RequiresPermission(pufferpanel.ScopeServersCreate, false), panelmiddleware.HasTransaction, createServer)
+	g.Handle("GET", "/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), getServer)
+	g.Handle("PUT", "/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersCreate, false), panelmiddleware.HasTransaction, createServer)
+	g.Handle("POST", "/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, createServer)
+	g.Handle("DELETE", "/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersDelete, true), panelmiddleware.HasTransaction, deleteServer)
+	g.Handle("PUT", "/:serverId/name/:name", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, renameServer)
 	g.Handle("OPTIONS", "/:serverId", response.CreateOptions("PUT", "GET", "POST", "DELETE"))
 
-	g.Handle("GET", "/:serverId/user", panelmiddleware.HasPermission(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
+	g.Handle("GET", "/:serverId/user", middleware.RequiresPermission(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
 	g.Handle("OPTIONS", "/:serverId/user", response.CreateOptions("GET"))
 
-	g.Handle("GET", "/:serverId/user/:email", panelmiddleware.HasPermission(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
-	g.Handle("PUT", "/:serverId/user/:email", panelmiddleware.HasPermission(pufferpanel.ScopeServersEditUsers, true), panelmiddleware.HasTransaction, editServerUser)
-	g.Handle("DELETE", "/:serverId/user/:email", panelmiddleware.HasPermission(pufferpanel.ScopeServersEditUsers, true), panelmiddleware.HasTransaction, removeServerUser)
+	g.Handle("GET", "/:serverId/user/:email", middleware.RequiresPermission(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
+	g.Handle("PUT", "/:serverId/user/:email", middleware.RequiresPermission(pufferpanel.ScopeServersEditUsers, true), panelmiddleware.HasTransaction, editServerUser)
+	g.Handle("DELETE", "/:serverId/user/:email", middleware.RequiresPermission(pufferpanel.ScopeServersEditUsers, true), panelmiddleware.HasTransaction, removeServerUser)
 	g.Handle("OPTIONS", "/:serverId/user/:email", response.CreateOptions("GET", "PUT", "DELETE"))
 
-	g.Handle("GET", "/:serverId/oauth2", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, true), getOAuth2Clients)
-	g.Handle("POST", "/:serverId/oauth2", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, true), createOAuth2Client)
+	g.Handle("GET", "/:serverId/oauth2", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), getOAuth2Clients)
+	g.Handle("POST", "/:serverId/oauth2", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), createOAuth2Client)
 	g.Handle("OPTIONS", "/:serverId/oauth2", response.CreateOptions("GET", "POST"))
 
-	g.Handle("DELETE", "/:serverId/oauth2/:clientId", panelmiddleware.HasPermission(pufferpanel.ScopeServersView, true), deleteOAuth2Client)
+	g.Handle("DELETE", "/:serverId/oauth2/:clientId", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), deleteOAuth2Client)
 	g.Handle("OPTIONS", "/:serverId/oauth2/:clientId", response.CreateOptions("DELETE"))
 }
 

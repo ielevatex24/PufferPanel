@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
@@ -11,8 +12,8 @@ import (
 )
 
 func registerUserSettings(g *gin.RouterGroup) {
-	g.Handle("GET", "", panelmiddleware.HasPermission(pufferpanel.ScopeNone, false), getUserSettings)
-	g.Handle("PUT", "/:key", panelmiddleware.HasPermission(pufferpanel.ScopeNone, false), setUserSetting)
+	g.Handle("GET", "", middleware.RequiresPermission(pufferpanel.ScopeNone, false), getUserSettings)
+	g.Handle("PUT", "/:key", middleware.RequiresPermission(pufferpanel.ScopeNone, false), setUserSetting)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET", "PUT"))
 }
 

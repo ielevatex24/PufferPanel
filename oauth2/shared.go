@@ -20,12 +20,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"net/http"
 	"net/url"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -60,13 +60,12 @@ func RefreshToken() bool {
 	data.Set("grant_type", "client_credentials")
 	data.Set("client_id", clientId)
 	data.Set("client_secret", clientSecret)
-	encodedData := data.Encode()
 
-	request := createRequest(encodedData)
+	authUrl := config.AuthUrl.Value()
+	request, _ := http.NewRequest("POST", authUrl, bytes.NewBufferString(data.Encode()))
 
 	request.Header.Add("Authorization", "Bearer "+daemonToken)
-	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	request.Header.Add("Content-Length", strconv.Itoa(len(encodedData)))
+	request.Header.Add("Content-Type", binding.MIMEPOSTForm)
 	response, err := pufferpanel.Http().Do(request)
 	defer pufferpanel.CloseResponse(response)
 	if err != nil {
@@ -99,9 +98,16 @@ func RefreshIfStale() {
 	}
 }
 
-func createRequest(encodedData string) (request *http.Request) {
+func CreateRequest(data url.Values) (request *http.Request) {
 	authUrl := config.AuthUrl.Value()
-	request, _ = http.NewRequest("POST", authUrl, bytes.NewBufferString(encodedData))
+	request, _ = http.NewRequest("POST", authUrl, bytes.NewBufferString(data.Encode()))
+
+	RefreshIfStale()
+
+	atLocker.RLock()
+	request.Header.Add("Authorization", "Bearer "+daemonToken)
+	atLocker.RUnlock()
+	request.Header.Add("Content-Type", binding.MIMEPOSTForm)
 	return
 }
 
@@ -109,4 +115,20 @@ type requestResponse struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn   int64  `json:"expires_in"`
 	Error       string `json:"error"`
+}
+
+type TokenInfoResponse struct {
+	Active           bool   `json:"active"`
+	Scope            string `json:"scope,omitempty"`
+	Error            string `json:"error,omitempty"`
+	ErrorDescription string `json:"error_description,omitempty"`
+}
+
+type TokenResponse struct {
+	AccessToken      string `json:"access_token,omitempty"`
+	TokenType        string `json:"token_type,omitempty"`
+	ExpiresIn        int64  `json:"expires_in,omitempty"`
+	Scope            string `json:"scope"`
+	Error            string `json:"error,omitempty"`
+	ErrorDescription string `json:"error_description,omitempty"`
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
@@ -26,17 +27,17 @@ import (
 )
 
 func registerTemplates(g *gin.RouterGroup) {
-	g.Handle("GET", "/", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesView, false), getRepos)
+	g.Handle("GET", "/", middleware.RequiresPermission(pufferpanel.ScopeTemplatesView, false), getRepos)
 	g.Handle("OPTIONS", "/", response.CreateOptions("GET"))
 
-	g.Handle("GET", "/:repo", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesView, false), getsTemplatesForRepo)
-	g.Handle("PUT", "/:repo", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesEdit, false), addRepo)
-	g.Handle("DELETE", "/:repo", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesEdit, false), deleteRepo)
+	g.Handle("GET", "/:repo", middleware.RequiresPermission(pufferpanel.ScopeTemplatesView, false), getsTemplatesForRepo)
+	g.Handle("PUT", "/:repo", middleware.RequiresPermission(pufferpanel.ScopeTemplatesEdit, false), addRepo)
+	g.Handle("DELETE", "/:repo", middleware.RequiresPermission(pufferpanel.ScopeTemplatesEdit, false), deleteRepo)
 	g.Handle("OPTIONS", "/:repo", response.CreateOptions("GET", "PUT", "DELETE"))
 
-	g.Handle("GET", "/:repo/:name", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesView, false), getTemplateFromRepo)
-	g.Handle("DELETE", "/local/:name", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesEdit, false), deleteTemplate)
-	g.Handle("PUT", "/local/:name", panelmiddleware.HasPermission(pufferpanel.ScopeTemplatesEdit, false), putTemplate)
+	g.Handle("GET", "/:repo/:name", middleware.RequiresPermission(pufferpanel.ScopeTemplatesView, false), getTemplateFromRepo)
+	g.Handle("DELETE", "/local/:name", middleware.RequiresPermission(pufferpanel.ScopeTemplatesEdit, false), deleteTemplate)
+	g.Handle("PUT", "/local/:name", middleware.RequiresPermission(pufferpanel.ScopeTemplatesEdit, false), putTemplate)
 	g.Handle("OPTIONS", "/:repo/:name", response.CreateOptions("GET"))
 	g.Handle("OPTIONS", "/local/:name", response.CreateOptions("GET", "DELETE", "PUT"))
 }

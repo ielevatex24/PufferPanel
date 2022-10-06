@@ -16,6 +16,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/response"
@@ -26,17 +27,17 @@ import (
 )
 
 func registerUsers(g *gin.RouterGroup) {
-	g.Handle("GET", "", panelmiddleware.HasPermission(pufferpanel.ScopeUsersView, false), searchUsers)
-	g.Handle("POST", "", panelmiddleware.HasPermission(pufferpanel.ScopeUsersEdit, false), createUser)
+	g.Handle("GET", "", middleware.RequiresPermission(pufferpanel.ScopeUsersView, false), searchUsers)
+	g.Handle("POST", "", middleware.RequiresPermission(pufferpanel.ScopeUsersEdit, false), createUser)
 	g.Handle("OPTIONS", "", response.CreateOptions("GET", "POST"))
 
-	g.Handle("GET", "/:id", panelmiddleware.HasPermission(pufferpanel.ScopeUsersView, false), getUser)
-	g.Handle("POST", "/:id", panelmiddleware.HasPermission(pufferpanel.ScopeUsersEdit, false), updateUser)
-	g.Handle("DELETE", "/:id", panelmiddleware.HasPermission(pufferpanel.ScopeUsersEdit, false), deleteUser)
+	g.Handle("GET", "/:id", middleware.RequiresPermission(pufferpanel.ScopeUsersView, false), getUser)
+	g.Handle("POST", "/:id", middleware.RequiresPermission(pufferpanel.ScopeUsersEdit, false), updateUser)
+	g.Handle("DELETE", "/:id", middleware.RequiresPermission(pufferpanel.ScopeUsersEdit, false), deleteUser)
 	g.Handle("OPTIONS", "/:id", response.CreateOptions("GET", "POST", "DELETE"))
 
-	g.Handle("GET", "/:id/perms", panelmiddleware.HasPermission(pufferpanel.ScopeUsersView, false), getUserPerms)
-	g.Handle("PUT", "/:id/perms", panelmiddleware.HasPermission(pufferpanel.ScopeUsersEdit, false), setUserPerms)
+	g.Handle("GET", "/:id/perms", middleware.RequiresPermission(pufferpanel.ScopeUsersView, false), getUserPerms)
+	g.Handle("PUT", "/:id/perms", middleware.RequiresPermission(pufferpanel.ScopeUsersEdit, false), setUserPerms)
 	g.Handle("OPTIONS", "/:id/perms", response.CreateOptions("PUT", "GET"))
 }
 
