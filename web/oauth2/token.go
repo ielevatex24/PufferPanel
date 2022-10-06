@@ -19,7 +19,6 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
-	"github.com/pufferpanel/pufferpanel/v3/oauth2"
 	"github.com/pufferpanel/pufferpanel/v3/response"
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"net/http"
@@ -38,13 +37,13 @@ func handleTokenRequest(c *gin.Context) {
 	var request oauth2TokenRequest
 	err := c.MustBindWith(&request, binding.FormPost)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+		c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 		return
 	}
 
 	db := panelmiddleware.GetDatabase(c)
 	if db == nil {
-		c.JSON(http.StatusInternalServerError, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: "database not available"})
+		c.JSON(http.StatusInternalServerError, &TokenResponse{Error: "invalid_request", ErrorDescription: "database not available"})
 		return
 	}
 
@@ -56,12 +55,12 @@ func handleTokenRequest(c *gin.Context) {
 			os := &services.OAuth2{DB: db}
 			client, err := os.Get(request.ClientId)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 				return
 			}
 
 			if !client.ValidateSecret(request.ClientSecret) {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_client"})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_client"})
 				return
 			}
 
@@ -74,7 +73,7 @@ func handleTokenRequest(c *gin.Context) {
 				}
 				perms, err := ps.GetForUserAndServer(client.UserId, serverId)
 				if err != nil {
-					c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+					c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 					return
 				}
 				client.Scopes = perms.ToScopes()
@@ -82,11 +81,11 @@ func handleTokenRequest(c *gin.Context) {
 
 			token, err := session.CreateForClient(client)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 				return
 			}
 
-			c.JSON(http.StatusOK, &oauth2.TokenResponse{
+			c.JSON(http.StatusOK, &TokenResponse{
 				AccessToken: token,
 				TokenType:   "Bearer",
 				Scope:       string(pufferpanel.ScopeOAuth2Auth),
@@ -99,7 +98,7 @@ func handleTokenRequest(c *gin.Context) {
 			auth := strings.TrimSpace(c.GetHeader("Authorization"))
 			if auth == "" || !strings.HasPrefix(auth, "Bearer ") {
 				c.Header("WWW-Authenticate", "Bearer")
-				c.JSON(http.StatusUnauthorized, &oauth2.TokenResponse{Error: "invalid_client"})
+				c.JSON(http.StatusUnauthorized, &TokenResponse{Error: "invalid_client"})
 				return
 			}
 
@@ -107,7 +106,7 @@ func handleTokenRequest(c *gin.Context) {
 			auth = strings.TrimPrefix(auth, "Bearer ")
 			node, err := session.ValidateNode(auth)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 				return
 			}
 
@@ -118,19 +117,19 @@ func handleTokenRequest(c *gin.Context) {
 			parts := strings.SplitN(request.Username, "|", 2)
 			user, err := us.GetByEmail(parts[0])
 			if err != nil {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 				return
 			}
 
 			server, err := ss.Get(parts[1])
 			if err != nil {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 				return
 			}
 
 			//ensure the node asking for the credential check is where this server is
 			if server.NodeID != node.ID {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
 				return
 			}
 
@@ -138,22 +137,22 @@ func handleTokenRequest(c *gin.Context) {
 			ps := &services.Permission{DB: db}
 			perms, err := ps.GetForUserAndServer(user.ID, &server.Identifier)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: err.Error()})
 				return
 			}
 			if perms.ID == 0 || !perms.SFTPServer {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
 				return
 			}
 
 			//validate their credentials
 			user, token, optNeeded, err := us.Login(user.Email, request.Password)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
 				return
 			} else if optNeeded == false && token == "" {
 				//if they do not have opt enabled, but we don't have a token... it's still a bad login
-				c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
+				c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
 				return
 			} else if optNeeded == true {
 				//at this point, their login credentials were valid, and we need to shortcut because otp
@@ -161,7 +160,7 @@ func handleTokenRequest(c *gin.Context) {
 				token, err = sessionService.CreateForUser(user)
 				if err != nil {
 					logging.Error.Printf("Error generating token: %s", err.Error())
-					c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
+					c.JSON(http.StatusBadRequest, &TokenResponse{Error: "invalid_request", ErrorDescription: "no access"})
 					return
 				}
 			}
@@ -171,7 +170,7 @@ func handleTokenRequest(c *gin.Context) {
 			for _, p := range perms.ToScopes() {
 				mappedScopes = append(mappedScopes, server.Identifier+":"+string(p))
 			}
-			c.JSON(http.StatusOK, &oauth2.TokenResponse{
+			c.JSON(http.StatusOK, &TokenResponse{
 				AccessToken: token,
 				TokenType:   "Bearer",
 				Scope:       strings.Join(mappedScopes, " "),
@@ -179,7 +178,7 @@ func handleTokenRequest(c *gin.Context) {
 			})
 		}
 	default:
-		c.JSON(http.StatusBadRequest, &oauth2.TokenResponse{Error: "unsupported_grant_type"})
+		c.JSON(http.StatusBadRequest, &TokenResponse{Error: "unsupported_grant_type"})
 	}
 }
 
@@ -189,4 +188,13 @@ type oauth2TokenRequest struct {
 	ClientSecret string `form:"client_secret"`
 	Username     string `form:"username"`
 	Password     string `form:"password"`
+}
+
+type TokenResponse struct {
+	AccessToken      string `json:"access_token,omitempty"`
+	TokenType        string `json:"token_type,omitempty"`
+	ExpiresIn        int64  `json:"expires_in,omitempty"`
+	Scope            string `json:"scope"`
+	Error            string `json:"error,omitempty"`
+	ErrorDescription string `json:"error_description,omitempty"`
 }

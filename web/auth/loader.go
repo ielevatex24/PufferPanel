@@ -15,6 +15,8 @@ package auth
 
 import (
 	"github.com/gin-gonic/gin"
+	cors "github.com/itsjamie/gin-cors"
+	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 )
@@ -28,4 +30,8 @@ func RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("otp", panelmiddleware.NeedsDatabase, OtpPost)
 	rg.POST("register", panelmiddleware.NeedsDatabase, RegisterPost)
 	rg.POST("reauth", panelmiddleware.AuthMiddleware, panelmiddleware.NeedsDatabase, Reauth)
+	rg.Handle("GET", "/node/socket", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), cors.Middleware(cors.Config{
+		Origins:     "*",
+		Credentials: true,
+	}), registerNodeLogin)
 }

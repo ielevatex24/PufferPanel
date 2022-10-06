@@ -25,7 +25,6 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/oauth2"
 	"golang.org/x/crypto/ssh"
 	"net"
 	"os"
@@ -55,7 +54,7 @@ func Stop() {
 
 func runServer() error {
 	if auth == nil {
-		auth = &oauth2.WebSSHAuthorization{}
+		//auth = &oauth2.WebSSHAuthorization{}
 	}
 
 	serverConfig := &ssh.ServerConfig{

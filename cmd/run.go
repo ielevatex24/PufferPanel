@@ -20,7 +20,6 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
-	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	daemon "github.com/pufferpanel/pufferpanel/v3/daemon/entry"
 	"github.com/pufferpanel/pufferpanel/v3/daemon/programs"
@@ -94,14 +93,13 @@ func internalRun(terminate chan bool) {
 		terminate <- true
 	}()
 
-	router := gin.New()
-	router.Use(gin.Recovery())
-	router.Use(gin.LoggerWithWriter(logging.Info.Writer()))
-	gin.DefaultWriter = logging.Info.Writer()
-	gin.DefaultErrorWriter = logging.Error.Writer()
-	pufferpanel.Engine = router
-
 	if config.PanelEnabled.Value() {
+		router := gin.New()
+		router.Use(gin.Recovery())
+		router.Use(gin.LoggerWithWriter(logging.Info.Writer()))
+		gin.DefaultWriter = logging.Info.Writer()
+		gin.DefaultErrorWriter = logging.Error.Writer()
+
 		panel()
 
 		if config.SessionKey.Value() == "" {
@@ -121,20 +119,9 @@ func internalRun(terminate chan bool) {
 		}
 		sessionStore := cookie.NewStore(result)
 		router.Use(sessions.Sessions("session", sessionStore))
-	}
 
-	if config.DaemonEnabled.Value() {
-		err := daemon.Start()
-		if err != nil {
-			logging.Error.Printf("error starting daemon server: %s", err.Error())
-			terminate <- true
-			return
-		}
-	}
+		web.RegisterRoutes(router)
 
-	web.RegisterRoutes(router)
-
-	go func() {
 		l, err := net.Listen("tcp", config.WebHost.Value())
 		if err != nil {
 			logging.Error.Printf("error starting http server: %s", err.Error())
@@ -149,7 +136,16 @@ func internalRun(terminate chan bool) {
 			logging.Error.Printf("error listening for http requests: %s", err.Error())
 			terminate <- true
 		}
-	}()
+	}
+
+	if config.DaemonEnabled.Value() {
+		err := daemon.Start()
+		if err != nil {
+			logging.Error.Printf("error starting daemon server: %s", err.Error())
+			terminate <- true
+			return
+		}
+	}
 
 	return
 }

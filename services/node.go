@@ -14,18 +14,12 @@
 package services
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/pufferpanel/pufferpanel/v3"
-	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"gorm.io/gorm"
-	"io"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"strings"
+	"sync"
 )
 
 var wsupgrader = websocket.Upgrader{
@@ -39,6 +33,9 @@ var wsupgrader = websocket.Upgrader{
 type Node struct {
 	DB *gorm.DB
 }
+
+var nodeConnections = make(map[uint]*websocket.Conn)
+var nodeLocker sync.Mutex
 
 func (ns *Node) GetAll() (*models.Nodes, error) {
 	nodes := &models.Nodes{}
@@ -81,157 +78,22 @@ func (ns *Node) Create(node *models.Node) error {
 	return res.Error
 }
 
-func (ns *Node) CallNode(node *models.Node, method string, path string, body io.ReadCloser, headers http.Header) (*http.Response, error) {
-	var fullUrl string
-	var err error
+func (ns *Node) AddNodeConnection(node *models.Node, conn *websocket.Conn) {
+	nodeLocker.Lock()
+	defer nodeLocker.Unlock()
 
-	if node.IsLocal() {
-		fullUrl = "http://localhost" + path
-	} else {
-		fullUrl, err = createNodeURL(node, path)
-		if err != nil {
-			return nil, err
-		}
+	//if we have a connection, terminate it
+	existing := nodeConnections[node.ID]
+	if existing != nil {
+		_ = existing.Close()
 	}
 
-	addr, err := url.Parse(fullUrl)
-	if err != nil {
-		return nil, err
-	}
-
-	request := &http.Request{
-		Method: method,
-		URL:    addr,
-		Header: headers,
-	}
-
-	if method != "GET" && body != nil {
-		request.Body = body
-	}
-
-	if node.IsLocal() {
-		w := &httptest.ResponseRecorder{}
-		w.Body = &bytes.Buffer{}
-		pufferpanel.Engine.ServeHTTP(w, request)
-		return w.Result(), err
-	}
-
-	response, err := pufferpanel.Http().Do(request)
-	return response, err
+	nodeConnections[node.ID] = conn
 }
 
-func (ns *Node) OpenSocket(node *models.Node, path string, writer http.ResponseWriter, request *http.Request) error {
-	ssl, err := doesDaemonUseSSL(node)
-	if err != nil {
-		return err
-	}
+func (ns *Node) GetNodeConnection(id uint) *websocket.Conn {
+	nodeLocker.Lock()
+	defer nodeLocker.Unlock()
 
-	scheme := "ws"
-	if ssl {
-		scheme = "wss"
-	}
-	addr := fmt.Sprintf("%s:%d", node.PrivateHost, node.PrivatePort)
-
-	u := url.URL{Scheme: scheme, Host: addr, Path: path}
-	logging.Debug.Printf("Proxying connection to %s", u.String())
-
-	header := http.Header{}
-	header.Set("Authorization", request.Header.Get("Authorization"))
-
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), header)
-	if err != nil {
-		return err
-	}
-
-	conn, err := wsupgrader.Upgrade(writer, request, nil)
-	if err != nil {
-		return err
-	}
-
-	go func(daemon *websocket.Conn, client *websocket.Conn) {
-		defer func() {
-			_ = daemon.Close()
-			_ = client.Close()
-		}()
-
-		ch := make(chan error)
-		go proxyRead(daemon, client, ch)
-		go proxyRead(client, daemon, ch)
-
-		err := <-ch
-
-		if err != nil {
-			logging.Error.Printf("Error proxying socket: %s", err)
-		}
-	}(c, conn)
-
-	return nil
-}
-
-func doesDaemonUseSSL(node *models.Node) (bool, error) {
-	if node.IsLocal() {
-		return false, nil
-	}
-
-	path := fmt.Sprintf("://%s:%d/daemon", node.PrivateHost, node.PrivatePort)
-
-	//we want to do options so we can avoid auth
-	u, err := url.Parse("https" + path)
-	if err != nil {
-		return false, err
-	}
-
-	request := &http.Request{Method: http.MethodOptions, URL: u}
-	_, err = pufferpanel.Http().Do(request)
-
-	if err != nil {
-		u, err = url.Parse("http" + path)
-		if err != nil {
-			return false, err
-		}
-
-		request = &http.Request{Method: http.MethodOptions, URL: u}
-		_, err = pufferpanel.Http().Do(request)
-		return false, err
-	}
-
-	return true, nil
-}
-
-func createNodeURL(node *models.Node, path string) (string, error) {
-	ssl, err := doesDaemonUseSSL(node)
-	if err != nil {
-		return "", err
-	}
-
-	if strings.HasPrefix(path, "/") {
-		path = strings.TrimPrefix(path, "/")
-	}
-
-	if strings.HasSuffix(path, "/") {
-		path = strings.TrimSuffix(path, "/")
-	}
-
-	protocol := "http"
-	if ssl {
-		protocol = "https"
-	}
-
-	return fmt.Sprintf("%s://%s:%d/%s", protocol, node.PrivateHost, node.PrivatePort, path), nil
-}
-
-func proxyRead(source, dest *websocket.Conn, ch chan error) {
-	for {
-		messageType, data, err := source.ReadMessage()
-
-		if err != nil {
-			ch <- err
-			return
-		}
-		err = dest.WriteMessage(messageType, data)
-		if err != nil {
-			ch <- err
-			return
-		}
-	}
+	return nodeConnections[id]
 }

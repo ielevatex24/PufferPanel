@@ -20,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
 	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/comms"
 	"github.com/pufferpanel/pufferpanel/v3/database"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/middleware"
@@ -72,7 +73,7 @@ func registerServers(g *gin.RouterGroup) {
 	g.Handle("DELETE", "/:serverId/tasks/:taskId", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), response.NotImplemented)
 	g.Handle("OPTIONS", "/:serverId/tasks", response.CreateOptions("GET", "POST", "PUT", "DELETE"))
 
-	g.Handle("POST", "/:serverId/start", middleware.RequiresPermission(pufferpanel.ScopeServersStart, true), response.NotImplemented)
+	g.Handle("POST", "/:serverId/start", middleware.RequiresPermission(pufferpanel.ScopeServersStart, true), startServer)
 	g.Handle("OPTIONS", "/:serverId/start", response.CreateOptions("POST"))
 
 	g.Handle("POST", "/:serverId/stop", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), response.NotImplemented)
@@ -992,4 +993,21 @@ func getFromDataOrDefault(variables map[string]pufferpanel.Variable, key string,
 	}
 
 	return val, nil
+}
+
+func startServer(c *gin.Context) {
+	server := c.MustGet("server").(*models.Server)
+
+	ns := services.Node{}
+
+	conn := ns.GetNodeConnection(server.NodeID)
+	if conn == nil {
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+	err := comms.Send(conn, comms.NewStartServer(server.Identifier))
+	if response.HandleError(c, err, http.StatusServiceUnavailable) {
+		return
+	}
+	c.Status(http.StatusNoContent)
 }

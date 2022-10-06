@@ -2,6 +2,7 @@ package entry
 
 import (
 	"github.com/pufferpanel/pufferpanel/v3/config"
+	"github.com/pufferpanel/pufferpanel/v3/daemon/comms"
 	"github.com/pufferpanel/pufferpanel/v3/daemon/environments"
 	"github.com/pufferpanel/pufferpanel/v3/daemon/programs"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
@@ -12,13 +13,14 @@ import (
 )
 
 func Start() error {
+	comms.StartConnection()
+
 	sftp.Run()
 
 	environments.LoadModules()
 	programs.Initialize()
 
 	var err error
-
 	if _, err = os.Stat(config.ServersFolder.Value()); os.IsNotExist(err) {
 		logging.Info.Printf("No server directory found, creating")
 		err = os.MkdirAll(config.ServersFolder.Value(), 0755)
