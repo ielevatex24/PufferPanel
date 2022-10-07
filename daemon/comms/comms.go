@@ -35,7 +35,7 @@ func recoverConnection() {
 	secret := config.DaemonSecret.Value()
 
 	if baseUrl == "" && config.PanelEnabled.Value() {
-		baseUrl = strings.Replace(config.PanelUrl.Value(), "0.0.0.0:", "127.0.0.1:", 1) + "/auth/node/socket"
+		baseUrl = strings.Replace(config.WebHost.Value(), "0.0.0.0:", "127.0.0.1:", 1) + "/auth/node/socket"
 	}
 	baseUrl = strings.Replace(baseUrl, "https://", "wss://", 1)
 	baseUrl = strings.Replace(baseUrl, "http://", "ws://", 1)
