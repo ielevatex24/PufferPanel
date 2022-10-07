@@ -6,6 +6,7 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/comms"
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/daemon/programs"
+	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"net/http"
 	"strings"
 	"sync"
@@ -34,17 +35,30 @@ func recoverConnection() {
 	secret := config.DaemonSecret.Value()
 
 	if baseUrl == "" && config.PanelEnabled.Value() {
-		baseUrl = strings.Replace(config.PanelUrl.Value(), "0.0.0.0:", "127.0.0.1:", 1)
+		baseUrl = strings.Replace(config.PanelUrl.Value(), "0.0.0.0:", "127.0.0.1:", 1) + "/auth/node/socket"
+	}
+	baseUrl = strings.Replace(baseUrl, "https://", "wss://", 1)
+	baseUrl = strings.Replace(baseUrl, "http://", "ws://", 1)
+	if !strings.HasPrefix(baseUrl, "ws://") && !strings.HasPrefix(baseUrl, "wss://") {
+		baseUrl = "ws://" + baseUrl
+	}
+	if !strings.HasSuffix(baseUrl, "/auth/node/socket") {
+		baseUrl = baseUrl + "/auth/node/socket"
 	}
 
 	header := http.Header{}
 	header.Set("Authorization", "Node "+secret)
+
+	logging.Debug.Printf("opening websocket connection to %s", baseUrl)
 	conn, _, err := websocket.DefaultDialer.Dial(baseUrl, header)
 
 	for err != nil {
+		logging.Error.Printf("error re-establishing socket connection to panel: %s", err)
 		time.Sleep(time.Second * 5)
 		conn, _, err = websocket.DefaultDialer.Dial(baseUrl, header)
 	}
+
+	logging.Info.Printf("re-established socket connection to panel")
 
 	if conn != nil {
 		_conn = conn
@@ -52,6 +66,14 @@ func recoverConnection() {
 }
 
 func listen() {
+	defer func() {
+		if err := recover(); err != nil {
+			logging.Error.Printf("critical error re-establishing socket connection to panel: %s", err)
+		}
+	}()
+	if _conn == nil {
+		recoverConnection()
+	}
 	for {
 		messageType, d, err := _conn.ReadMessage()
 		if err != nil {

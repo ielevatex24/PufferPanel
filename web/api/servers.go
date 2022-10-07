@@ -14,9 +14,6 @@
 package api
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
 	"github.com/pufferpanel/pufferpanel/v3"
@@ -30,7 +27,6 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -376,8 +372,8 @@ func createServer(c *gin.Context) {
 		}
 	}
 
-	data, _ := json.Marshal(postBody.Server)
-	reader := ioutil.NopCloser(bytes.NewReader(data))
+	//data, _ := json.Marshal(postBody.Server)
+	//reader := ioutil.NopCloser(bytes.NewReader(data))
 
 	//we need to get your new token
 	token, err := c.Cookie("puffer_auth")
@@ -388,7 +384,7 @@ func createServer(c *gin.Context) {
 	headers := http.Header{}
 	headers.Set("Authorization", "Bearer "+token)
 
-	nodeResponse, err := ns.CallNode(node, "PUT", "/daemon/server/"+server.Identifier, reader, headers)
+	/*nodeResponse, err := ns.CallNode(node, "PUT", "/daemon/server/"+server.Identifier, reader, headers)
 	if nodeResponse != nil {
 		defer pufferpanel.Close(nodeResponse.Body)
 	}
@@ -409,7 +405,7 @@ func createServer(c *gin.Context) {
 		_, _ = c.Writer.Write(resData)
 		c.Abort()
 		return
-	}
+	}*/
 
 	if response.HandleError(c, db.Commit().Error, http.StatusInternalServerError) {
 		return
@@ -467,7 +463,7 @@ func deleteServer(c *gin.Context) {
 		return
 	}
 
-	node, err := ns.Get(server.NodeID)
+	_, err = ns.Get(server.NodeID)
 	if err != nil {
 		response.HandleError(c, err, http.StatusInternalServerError)
 		return
@@ -504,7 +500,7 @@ func deleteServer(c *gin.Context) {
 	headers := http.Header{}
 	headers.Add("Authorization", "Bearer "+newHeader)
 
-	nodeRes, err := ns.CallNode(node, "DELETE", "/daemon/server/"+server.Identifier, nil, headers)
+	/*nodeRes, err := ns.CallNode(node, "DELETE", "/daemon/server/"+server.Identifier, nil, headers)
 	if response.HandleError(c, err, http.StatusInternalServerError) {
 		//node didn't permit it, REVERT!
 		db.Rollback()
@@ -514,7 +510,7 @@ func deleteServer(c *gin.Context) {
 	if nodeRes.StatusCode != http.StatusNoContent {
 		response.HandleError(c, errors.New("invalid status code response: "+nodeRes.Status), http.StatusInternalServerError)
 		return
-	}
+	}*/
 
 	if response.HandleError(c, db.Commit().Error, http.StatusInternalServerError) {
 		return

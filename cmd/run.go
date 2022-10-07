@@ -122,20 +122,22 @@ func internalRun(terminate chan bool) {
 
 		web.RegisterRoutes(router)
 
-		l, err := net.Listen("tcp", config.WebHost.Value())
-		if err != nil {
-			logging.Error.Printf("error starting http server: %s", err.Error())
-			terminate <- true
-			return
-		}
+		go func() {
+			l, err := net.Listen("tcp", config.WebHost.Value())
+			if err != nil {
+				logging.Error.Printf("error starting http server: %s", err.Error())
+				terminate <- true
+				return
+			}
 
-		logging.Info.Printf("Listening for HTTP requests on %s", l.Addr().String())
-		webService = manners.NewWithServer(&http.Server{Handler: router})
-		err = webService.Serve(l)
-		if err != nil && err != http.ErrServerClosed {
-			logging.Error.Printf("error listening for http requests: %s", err.Error())
-			terminate <- true
-		}
+			logging.Info.Printf("Listening for HTTP requests on %s", l.Addr().String())
+			webService = manners.NewWithServer(&http.Server{Handler: router})
+			err = webService.Serve(l)
+			if err != nil && err != http.ErrServerClosed {
+				logging.Error.Printf("error listening for http requests: %s", err.Error())
+				terminate <- true
+			}
+		}()
 	}
 
 	if config.DaemonEnabled.Value() {
