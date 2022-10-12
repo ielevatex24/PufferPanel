@@ -100,8 +100,6 @@ func RemoveServerPrivateInfo(server *ServerView) *ServerView {
 	if server.Node != nil {
 		server.Node.Id = 0
 		server.NodeId = 0
-		server.Node.PrivateHost = ""
-		server.Node.PrivatePort = 0
 	}
 
 	return server

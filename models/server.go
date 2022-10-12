@@ -24,7 +24,7 @@ type Server struct {
 	Name       string `gorm:"size:40;NOT NULL" json:"-" validate:"required,printascii"`
 	Identifier string `gorm:"UNIQUE;NOT NULL;primaryKey;size:8" json:"-" validate:"required,printascii"`
 
-	NodeID uint `gorm:"NOT NULL" json:"-" validate:"required,min=1"`
+	NodeID uint `gorm:"NOT NULL;default=0" json:"-" validate:"required"`
 	Node   Node `gorm:"ASSOCIATION_SAVE_REFERENCE:false" json:"-" validate:"-"`
 
 	IP   string `gorm:"" json:"-" validate:"omitempty,ip|fqdn"`
@@ -42,6 +42,13 @@ func (s *Server) IsValid() (err error) {
 	err = validator.New().Struct(s)
 	if err != nil {
 		err = pufferpanel.GenerateValidationMessage(err)
+	}
+	return
+}
+
+func (s *Server) AfterFind(*gorm.DB) (err error) {
+	if s.NodeID == LocalNode.ID {
+		s.Node = *LocalNode
 	}
 	return
 }

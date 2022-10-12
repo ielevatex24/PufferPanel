@@ -14,7 +14,6 @@
 package models
 
 type Deployment struct {
-	ClientId     string `json:"clientId"`
-	ClientSecret string `json:"clientSecret"`
-	PublicKey    string `json:"publicKey"`
+	PanelUrl string `json:"panelUrl"`
+	Secret   string `json:"secret"`
 }

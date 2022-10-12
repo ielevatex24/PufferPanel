@@ -14,9 +14,9 @@
 package api
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/middleware"
 	"github.com/pufferpanel/pufferpanel/v3/middleware/panelmiddleware"
 	"github.com/pufferpanel/pufferpanel/v3/models"
@@ -71,14 +71,6 @@ func getAllNodes(c *gin.Context) {
 
 	data := models.FromNodes(nodes)
 
-	//HACK: For our local node, we actually need to override the public IP
-	for _, d := range *data {
-		if d.PrivateHost == "127.0.0.1" && d.PublicHost == "127.0.0.1" {
-			d.PublicHost = pufferpanel.GetHostname(c.Request.Host)
-			break
-		}
-	}
-
 	c.JSON(http.StatusOK, data)
 }
 
@@ -109,10 +101,6 @@ func getNode(c *gin.Context) {
 	}
 
 	d := models.FromNode(node)
-
-	if d.PrivateHost == "127.0.0.1" && d.PublicHost == "127.0.0.1" {
-		d.PublicHost = strings.SplitN(c.Request.Host, ":", 2)[0]
-	}
 
 	c.JSON(http.StatusOK, d)
 }
@@ -256,8 +244,8 @@ func deployNode(c *gin.Context) {
 	}
 
 	data := &models.Deployment{
-		ClientId:     fmt.Sprintf(".node_%d", node.ID),
-		ClientSecret: node.Secret,
+		PanelUrl: config.MasterUrl.Value(),
+		Secret:   node.Secret,
 	}
 
 	c.JSON(http.StatusOK, data)

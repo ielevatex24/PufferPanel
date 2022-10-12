@@ -22,7 +22,6 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/comms"
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/models"
-	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
@@ -37,34 +36,16 @@ type Node struct {
 var nodeConnections = make(map[uint]*websocket.Conn)
 var nodeLocker sync.Mutex
 
-var LocalNode = &models.Node{
-	ID:          0,
-	Name:        "LocalNode",
-	PublicHost:  "127.0.0.1",
-	PrivateHost: "127.0.0.1",
-	PublicPort:  8080,
-	PrivatePort: 8080,
-	SFTPPort:    5657,
-	Secret:      strings.Replace(uuid.NewV4().String(), "-", "", -1),
-}
-
 func init() {
-	nodeHost := config.WebHost.Value()
+	models.LocalNode.PublicHost = strings.TrimSuffix(strings.TrimPrefix(strings.TrimPrefix(config.MasterUrl.Value(), "http://"), "https://"), "/")
+
 	sftpHost := config.SftpHost.Value()
-	hostParts := strings.SplitN(nodeHost, ":", 2)
 	sftpParts := strings.SplitN(sftpHost, ":", 2)
 
-	if len(hostParts) == 2 {
-		port, err := strconv.Atoi(hostParts[1])
-		if err == nil {
-			LocalNode.PublicPort = uint16(port)
-			LocalNode.PrivatePort = uint16(port)
-		}
-	}
 	if len(sftpParts) == 2 {
 		port, err := strconv.Atoi(sftpParts[1])
 		if err == nil {
-			LocalNode.SFTPPort = uint16(port)
+			models.LocalNode.SFTPPort = uint16(port)
 		}
 	}
 }
@@ -88,7 +69,7 @@ func (ns *Node) GetAll() ([]*models.Node, error) {
 		}
 
 		if !hasLocal {
-			nodes = append(nodes, LocalNode)
+			nodes = append(nodes, models.LocalNode)
 		}
 	}
 
@@ -98,8 +79,8 @@ func (ns *Node) GetAll() ([]*models.Node, error) {
 func (ns *Node) Get(id uint) (*models.Node, error) {
 	model := &models.Node{}
 
-	if id == LocalNode.ID && config.PanelEnabled.Value() {
-		return LocalNode, nil
+	if id == models.LocalNode.ID && config.PanelEnabled.Value() {
+		return models.LocalNode, nil
 	}
 
 	res := ns.DB.First(model, id)
@@ -107,7 +88,7 @@ func (ns *Node) Get(id uint) (*models.Node, error) {
 }
 
 func (ns *Node) Update(model *models.Node) error {
-	if model.ID == LocalNode.ID && config.PanelEnabled.Value() {
+	if model.ID == models.LocalNode.ID && config.PanelEnabled.Value() {
 		return nil
 	}
 
@@ -116,7 +97,7 @@ func (ns *Node) Update(model *models.Node) error {
 }
 
 func (ns *Node) Delete(id uint) error {
-	if id == LocalNode.ID && config.PanelEnabled.Value() {
+	if id == models.LocalNode.ID && config.PanelEnabled.Value() {
 		return errors.New("cannot delete local node")
 	}
 

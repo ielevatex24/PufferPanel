@@ -30,7 +30,6 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 func registerServers(g *gin.RouterGroup) {
@@ -206,12 +205,6 @@ func searchServers(c *gin.Context) {
 
 	data := models.FromServers(results)
 
-	for _, d := range data {
-		if d.Node.PrivateHost == "127.0.0.1" && d.Node.PublicHost == "127.0.0.1" {
-			d.Node.PublicHost = strings.SplitN(c.Request.Host, ":", 2)[0]
-		}
-	}
-
 	c.JSON(http.StatusOK, &models.ServerSearchResponse{
 		Servers: models.RemoveServerPrivateInfoFromAll(data),
 		Metadata: &response.Metadata{Paging: &response.Paging{
@@ -269,10 +262,6 @@ func getServer(c *gin.Context) {
 	d := &models.GetServerResponse{
 		Server: models.RemoveServerPrivateInfo(models.FromServer(server)),
 		Perms:  perms,
-	}
-
-	if d.Server.Node.PrivateHost == "127.0.0.1" && d.Server.Node.PublicHost == "127.0.0.1" {
-		d.Server.Node.PublicHost = strings.SplitN(c.Request.Host, ":", 2)[0]
 	}
 
 	c.JSON(http.StatusOK, d)

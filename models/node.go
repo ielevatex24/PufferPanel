@@ -15,19 +15,18 @@ package models
 
 import (
 	"github.com/pufferpanel/pufferpanel/v3"
+	uuid "github.com/satori/go.uuid"
 	"gopkg.in/go-playground/validator.v9"
 	"gorm.io/gorm"
+	"strings"
 	"time"
 )
 
 type Node struct {
-	ID          uint   `json:"-"`
-	Name        string `gorm:"size:100;UNIQUE;NOT NULL" json:"-" validate:"required,printascii"`
-	PublicHost  string `gorm:"size:100;NOT NULL" json:"-" validate:"required,ip|fqdn"`
-	PrivateHost string `gorm:"size:100;NOT NULL" json:"-" validate:"required,ip|fqdn"`
-	PublicPort  uint16 `gorm:"DEFAULT:8080;NOT NULL" json:"-" validate:"required,min=1,max=65535,nefield=SFTPPort"`
-	PrivatePort uint16 `gorm:"DEFAULT:8080;NOT NULL" json:"-" validate:"required,min=1,max=65535,nefield=SFTPPort"`
-	SFTPPort    uint16 `gorm:"DEFAULT:5657;NOT NULL" json:"-" validate:"required,min=1,max=65535,nefield=PublicPort,nefield=PrivatePort"`
+	ID         uint   `json:"-"`
+	Name       string `gorm:"size:100;UNIQUE;NOT NULL" json:"-" validate:"required,printascii"`
+	PublicHost string `gorm:"size:100;NOT NULL" json:"-" validate:"required,ip|fqdn"`
+	SFTPPort   uint16 `gorm:"DEFAULT:5657;NOT NULL" json:"-" validate:"required,min=1,max=65535,nefield=PublicPort,nefield=PrivatePort"`
 
 	Secret string `gorm:"size=36;NOT NULL" json:"-" validate:"required"`
 
@@ -49,5 +48,13 @@ func (n *Node) BeforeSave(*gorm.DB) (err error) {
 }
 
 func (n *Node) IsLocal() bool {
-	return (n.PrivateHost == "localhost" || n.PrivateHost == "127.0.0.1") && (n.PublicHost == "localhost" || n.PublicHost == "127.0.0.1")
+	return n.PublicHost == "localhost" || n.PublicHost == "127.0.0.1"
+}
+
+var LocalNode = &Node{
+	ID:         0,
+	Name:       "LocalNode",
+	PublicHost: "127.0.0.1",
+	SFTPPort:   5657,
+	Secret:     strings.Replace(uuid.NewV4().String(), "-", "", -1),
 }

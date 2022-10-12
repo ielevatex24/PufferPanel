@@ -7,7 +7,7 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/daemon/programs"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/services"
+	"github.com/pufferpanel/pufferpanel/v3/models"
 	"net/http"
 	"strings"
 	"sync"
@@ -36,7 +36,7 @@ func recoverConnection() {
 	secret := config.DaemonSecret.Value()
 
 	if config.PanelEnabled.Value() {
-		secret = services.LocalNode.Secret
+		secret = models.LocalNode.Secret
 	}
 
 	if baseUrl == "" && config.PanelEnabled.Value() {
