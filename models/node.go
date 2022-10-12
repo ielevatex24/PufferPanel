@@ -35,8 +35,6 @@ type Node struct {
 	UpdatedAt time.Time `json:"-"`
 }
 
-type Nodes []*Node
-
 func (n *Node) IsValid() (err error) {
 	err = validator.New().Struct(n)
 	if err != nil {

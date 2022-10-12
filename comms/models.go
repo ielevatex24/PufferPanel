@@ -2,6 +2,7 @@ package comms
 
 import (
 	"encoding/json"
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cast"
 )
 
@@ -34,7 +35,7 @@ type Confirmation struct {
 func ConfirmationType() string { return "confirmation" }
 func NewConfirmation(id string) Confirmation {
 	return Confirmation{
-		Type: StartServerType(),
+		Type: ConfirmationType(),
 		Id:   id,
 	}
 }
@@ -50,5 +51,21 @@ func NewStartServer(server string) StartServer {
 	return StartServer{
 		Type:   StartServerType(),
 		Server: server,
+		Id:     uuid.NewV4().String(),
+	}
+}
+
+type Error struct {
+	Type  string `json:"type"`
+	Id    string `json:"id"`
+	Error error  `json:"error"`
+}
+
+func ErrorType() string { return "error" }
+func NewError(id string, err error) Error {
+	return Error{
+		Type:  ErrorType(),
+		Id:    id,
+		Error: err,
 	}
 }

@@ -14,6 +14,7 @@
 package api
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
 	"github.com/pufferpanel/pufferpanel/v3"
@@ -1001,9 +1002,18 @@ func startServer(c *gin.Context) {
 		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
 	}
-	err := comms.Send(conn, comms.NewStartServer(server.Identifier))
+	msg := comms.NewStartServer(server.Identifier)
+	res, err := ns.Send(&server.Node, msg)
 	if response.HandleError(c, err, http.StatusServiceUnavailable) {
 		return
 	}
-	c.Status(http.StatusNoContent)
+
+	if res.Type() == comms.ConfirmationType() {
+		c.Status(http.StatusNoContent)
+	} else if res.Type() == comms.ErrorType() {
+		response.HandleError(c, comms.Cast[comms.Error](res).Error, http.StatusInternalServerError)
+	} else {
+		logging.Error.Printf("Expected confirmation or error from node, got %s", res.Type())
+		response.HandleError(c, errors.New("unknown response from node"), http.StatusInternalServerError)
+	}
 }

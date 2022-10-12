@@ -25,18 +25,14 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/daemon/programs"
 	"github.com/pufferpanel/pufferpanel/v3/database"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/models"
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"github.com/pufferpanel/pufferpanel/v3/sftp"
 	"github.com/pufferpanel/pufferpanel/v3/web"
-	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -158,53 +154,4 @@ func panel() {
 	//if we have the web, then let's use our sftp auth instead
 	sftp.SetAuthorization(&services.DatabaseSFTPAuthorization{})
 
-	//validate local daemon is configured in this panel
-	if config.DaemonEnabled.Value() {
-		db, err := database.GetConnection()
-		if err != nil {
-			return
-		}
-		ns := &services.Node{DB: db}
-		nodes, err := ns.GetAll()
-		if err != nil {
-			logging.Error.Printf("Failed to get nodes: %s", err.Error())
-			return
-		}
-
-		if len(*nodes) == 0 {
-			logging.Info.Printf("Adding local node")
-			create := &models.Node{
-				Name:        "LocalNode",
-				PublicHost:  "127.0.0.1",
-				PrivateHost: "127.0.0.1",
-				PublicPort:  8080,
-				PrivatePort: 8080,
-				SFTPPort:    5657,
-				Secret:      strings.Replace(uuid.NewV4().String(), "-", "", -1),
-			}
-			nodeHost := config.WebHost.Value()
-			sftpHost := config.SftpHost.Value()
-			hostParts := strings.SplitN(nodeHost, ":", 2)
-			sftpParts := strings.SplitN(sftpHost, ":", 2)
-
-			if len(hostParts) == 2 {
-				port, err := strconv.Atoi(hostParts[1])
-				if err == nil {
-					create.PublicPort = uint16(port)
-					create.PrivatePort = uint16(port)
-				}
-			}
-			if len(sftpParts) == 2 {
-				port, err := strconv.Atoi(sftpParts[1])
-				if err == nil {
-					create.SFTPPort = uint16(port)
-				}
-			}
-
-			err = ns.Create(create)
-			if err != nil {
-				logging.Error.Printf("Failed to add local node: %s", err.Error())
-			}
-		}
-	}
 }

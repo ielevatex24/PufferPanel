@@ -54,6 +54,10 @@ func (ss *Session) Validate(token string) (*models.Session, error) {
 }
 
 func (ss *Session) ValidateNode(token string) (*models.Node, error) {
+	if LocalNode != nil && LocalNode.Secret == token {
+		return LocalNode, nil
+	}
+
 	node := &models.Node{Secret: token}
 	err := ss.DB.Where(node).First(node).Error
 	return node, err

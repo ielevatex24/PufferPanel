@@ -64,7 +64,7 @@ func getAllNodes(c *gin.Context) {
 	db := panelmiddleware.GetDatabase(c)
 	ns := &services.Node{DB: db}
 
-	var nodes *models.Nodes
+	var nodes []*models.Node
 	if nodes, err = ns.GetAll(); response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}

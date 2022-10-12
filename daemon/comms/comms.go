@@ -7,6 +7,7 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/daemon/programs"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
+	"github.com/pufferpanel/pufferpanel/v3/services"
 	"net/http"
 	"strings"
 	"sync"
@@ -33,6 +34,10 @@ func recoverConnection() {
 
 	baseUrl := config.PanelUrl.Value()
 	secret := config.DaemonSecret.Value()
+
+	if config.PanelEnabled.Value() {
+		secret = services.LocalNode.Secret
+	}
 
 	if baseUrl == "" && config.PanelEnabled.Value() {
 		baseUrl = strings.Replace(config.WebHost.Value(), "0.0.0.0:", "127.0.0.1:", 1) + "/auth/node/socket"
@@ -75,8 +80,8 @@ func listen() {
 		recoverConnection()
 	}
 	for {
-		messageType, d, err := _conn.ReadMessage()
-		if err != nil {
+		messageType, d, e := _conn.ReadMessage()
+		if e != nil {
 			recoverConnection()
 		}
 		switch messageType {
@@ -89,26 +94,29 @@ func listen() {
 				//process this request in a new routine, so we don't stall other processing
 				go func(processData []byte) {
 					var msg comms.Message
-					err = json.Unmarshal(d, &msg)
+					err := json.Unmarshal(d, &msg)
 					if err != nil {
 						return
 					}
 
-					//send confirmation we got the request, and are working on it
-					_ = Send(comms.NewConfirmation(msg.Id()))
 					switch msg.Type() {
+					case comms.ConfirmationType():
+						break
 					case comms.StartServerType():
 						{
 							data := comms.Cast[comms.StartServer](msg)
 
 							prg, err := programs.Get(data.Server)
 							if err != nil {
+								_ = Send(comms.NewError(msg.Id(), err))
 								return
 							}
 							err = prg.Start()
 							if err != nil {
+								_ = Send(comms.NewError(msg.Id(), err))
 								return
 							}
+							_ = Send(comms.NewConfirmation(msg.Id()))
 						}
 					}
 				}(d)
@@ -125,7 +133,7 @@ func Send(data interface{}) error {
 	d, _ := json.Marshal(data)
 
 	//we will attempt to send the message twice, once if we think we have a connection, and then again once we've
-	//actually believe we have one
+	//actually believed we have one
 	err := _conn.WriteMessage(websocket.BinaryMessage, d)
 	if err != nil {
 		recoverConnection()
