@@ -143,9 +143,10 @@ func (ns *Node) AddNodeConnection(node *models.Node, conn *websocket.Conn) {
 					//send message to the waiting channel
 					ch2 := ch.(chan comms.Message)
 					ch2 <- msg
+				} else {
+					//this is probably the node requesting something, but we only have a few things we can expect the
+					//node to ask
 				}
-
-				//messageQueue.Store(msg.Id(), queueEntry{Time: time.Now(), Message: msg})
 			}
 		}
 	}(conn)
@@ -156,17 +157,29 @@ func (ns *Node) AddNodeConnection(node *models.Node, conn *websocket.Conn) {
 func (ns *Node) Send(node *models.Node, data interface{}) (comms.Message, error) {
 	var id string
 
+	d, _ := json.Marshal(data)
+
 	if y, ok := data.(idInterface); ok {
 		id = y.Id()
 	} else if y, ok := data.(map[string]interface{}); ok {
 		id = y["id"].(string)
+	} else if y, ok := data.(idStruct); ok {
+		id = y.Id
 	} else {
+		var m comms.Message
+		err := json.Unmarshal(d, &m)
+		if err != nil {
+			return nil, errors.New("invalid message type")
+		}
+		id = m.Id()
+	}
+
+	if id == "" {
 		return nil, errors.New("invalid message type")
 	}
 
 	ch := make(chan comms.Message, 1)
 
-	d, _ := json.Marshal(data)
 	pendingResponse.Store(id, ch)
 	defer pendingResponse.Delete(id)
 
@@ -207,4 +220,7 @@ func (ns *Node) GetNodeConnection(id uint) *websocket.Conn {
 
 type idInterface interface {
 	Id() string
+}
+type idStruct struct {
+	Id string
 }

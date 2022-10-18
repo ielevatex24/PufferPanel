@@ -983,7 +983,6 @@ func getFromDataOrDefault(variables map[string]pufferpanel.Variable, key string,
 
 func startServer(c *gin.Context) {
 	server := c.MustGet("server").(*models.Server)
-
 	ns := services.Node{}
 
 	conn := ns.GetNodeConnection(server.NodeID)
