@@ -19,7 +19,6 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
-	"github.com/pufferpanel/pufferpanel/v3/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -105,10 +104,12 @@ func openConnection() (err error) {
 		logging.Error.Printf("Error connecting to database: %s", err)
 		return pufferpanel.ErrDatabaseNotAvailable
 	}
-	if err := migrateModels(); err != nil {
-		return err
+
+	err = migrate(dbConn)
+	if err != nil {
+		logging.Error.Panicf("Failed to migrate database: %s", err.Error())
 	}
-	return migrate(dbConn)
+	return err
 }
 
 func GetConnection() (*gorm.DB, error) {
@@ -127,27 +128,6 @@ func Close() {
 	}
 }
 
-func migrateModels() error {
-	dbObjects := []interface{}{
-		&models.Node{},
-		&models.Server{},
-		&models.User{},
-		&models.Template{},
-		&models.Permissions{},
-		&models.Client{},
-		&models.UserSetting{},
-		&models.Session{},
-		&models.TemplateRepo{},
-	}
-
-	for _, v := range dbObjects {
-		if err := dbConn.AutoMigrate(v); err != nil {
-			return err
-		}
-	}
-	return migrate(dbConn)
-}
-
 func addConnectionSetting(connString, setting string) string {
 	if strings.Contains(connString, setting) {
 		return connString
@@ -161,14 +141,4 @@ func addConnectionSetting(connString, setting string) string {
 	connString += setting
 
 	return connString
-}
-
-type databaseConnector struct{}
-
-func (*databaseConnector) GetConnection() (*gorm.DB, error) {
-	return GetConnection()
-}
-
-func GetConnector() *databaseConnector {
-	return &databaseConnector{}
 }

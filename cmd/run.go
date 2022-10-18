@@ -154,4 +154,8 @@ func panel() {
 	//if we have the web, then let's use our sftp auth instead
 	sftp.SetAuthorization(&services.DatabaseSFTPAuthorization{})
 
+	_, err := database.GetConnection()
+	if err != nil {
+		logging.Error.Printf("Error connecting to database: %s", err.Error())
+	}
 }

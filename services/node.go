@@ -60,17 +60,7 @@ func (ns *Node) GetAll() ([]*models.Node, error) {
 	}
 
 	if config.PanelEnabled.Value() {
-		hasLocal := false
-		for _, v := range nodes {
-			if v.IsLocal() {
-				hasLocal = true
-				break
-			}
-		}
-
-		if !hasLocal {
-			nodes = append(nodes, models.LocalNode)
-		}
+		nodes = append(nodes, models.LocalNode)
 	}
 
 	return nodes, nil

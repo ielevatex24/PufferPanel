@@ -40,8 +40,10 @@ func (ss *Server) Search(searchCriteria ServerSearch) (records *models.Servers, 
 
 	if searchCriteria.NodeId != 0 {
 		query = query.Where(&models.Server{NodeID: searchCriteria.NodeId})
-	} else if searchCriteria.NodeName != "" {
+	} else if searchCriteria.NodeName != "" && searchCriteria.NodeName != "LocalNode" {
 		query = query.Joins("JOIN nodes n ON servers.node_id = n.id AND n.name = ?", searchCriteria.NodeName)
+	} else if searchCriteria.NodeName == "LocalNode" {
+		query = query.Where("node_id = 0")
 	}
 
 	if searchCriteria.Username != "" {
