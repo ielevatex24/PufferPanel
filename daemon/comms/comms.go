@@ -94,8 +94,7 @@ func listen() {
 				//process this request in a new routine, so we don't stall other processing
 				go func(processData []byte) {
 					var msg comms.Message
-					err := json.Unmarshal(d, &msg)
-					if err != nil {
+					if json.Unmarshal(d, &msg) != nil {
 						return
 					}
 
@@ -108,15 +107,96 @@ func listen() {
 
 							prg, err := programs.Get(data.Server)
 							if err != nil {
-								_ = Send(comms.NewError(msg.Id(), err))
-								return
-							}
-							err = prg.Start()
-							if err != nil {
-								_ = Send(comms.NewError(msg.Id(), err))
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
 								return
 							}
 							_ = Send(comms.NewConfirmation(msg.Id()))
+
+							err = prg.Start()
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+						}
+					case comms.StopServerType():
+						{
+							data := comms.Cast[comms.StopServer](msg)
+
+							prg, err := programs.Get(data.Server)
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+							_ = Send(comms.NewConfirmation(msg.Id()))
+
+							err = prg.Stop()
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+						}
+					case comms.RestartServerType():
+						{
+							data := comms.Cast[comms.RestartServer](msg)
+
+							prg, err := programs.Get(data.Server)
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+							_ = Send(comms.NewConfirmation(msg.Id()))
+
+							err = prg.Stop()
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+
+							err = prg.GetEnvironment().WaitForMainProcess()
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+
+							err = prg.Start()
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+						}
+					case comms.KillServerType():
+						{
+							data := comms.Cast[comms.KillServer](msg)
+
+							prg, err := programs.Get(data.Server)
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+							_ = Send(comms.NewConfirmation(msg.Id()))
+
+							err = prg.Kill()
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+						}
+					case comms.InstallServerType():
+						{
+							data := comms.Cast[comms.InstallServer](msg)
+
+							prg, err := programs.Get(data.Server)
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+							_ = Send(comms.NewConfirmation(msg.Id()))
+
+							err = prg.Install()
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
 						}
 					}
 				}(d)

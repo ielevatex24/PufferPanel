@@ -27,6 +27,10 @@ func Cast[T any](input Message) T {
 	return data
 }
 
+func NewId() string {
+	return uuid.NewV4().String()
+}
+
 type Confirmation struct {
 	Type string `json:"type"`
 	Id   string `json:"id"`
@@ -40,25 +44,11 @@ func NewConfirmation(id string) Confirmation {
 	}
 }
 
-type StartServer struct {
+type Error struct {
 	Type   string `json:"type"`
 	Id     string `json:"id"`
+	Error  error  `json:"error"`
 	Server string `json:"server"`
-}
-
-func StartServerType() string { return "server start" }
-func NewStartServer(server string) StartServer {
-	return StartServer{
-		Type:   StartServerType(),
-		Server: server,
-		Id:     uuid.NewV4().String(),
-	}
-}
-
-type Error struct {
-	Type  string `json:"type"`
-	Id    string `json:"id"`
-	Error error  `json:"error"`
 }
 
 func ErrorType() string { return "error" }
@@ -68,4 +58,17 @@ func NewError(id string, err error) Error {
 		Id:    id,
 		Error: err,
 	}
+}
+func NewErrorOnServer(id string, err error, server string) Error {
+	e := NewError(id, err)
+	e.Server = server
+	return e
+}
+
+func IsSuccess(msg Message) bool {
+	return msg.Type() == ConfirmationType()
+}
+
+func IsError(msg Message) bool {
+	return msg.Type() == ErrorType()
 }

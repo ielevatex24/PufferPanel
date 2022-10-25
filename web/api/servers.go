@@ -72,14 +72,17 @@ func registerServers(g *gin.RouterGroup) {
 	g.Handle("POST", "/:serverId/start", middleware.RequiresPermission(pufferpanel.ScopeServersStart, true), startServer)
 	g.Handle("OPTIONS", "/:serverId/start", response.CreateOptions("POST"))
 
-	g.Handle("POST", "/:serverId/stop", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), response.NotImplemented)
+	g.Handle("POST", "/:serverId/stop", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), stopServer)
 	g.Handle("OPTIONS", "/:serverId/stop", response.CreateOptions("POST"))
 
-	g.Handle("POST", "/:serverId/kill", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), response.NotImplemented)
+	g.Handle("POST", "/:serverId/kill", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), killServer)
 	g.Handle("OPTIONS", "/:serverId/kill", response.CreateOptions("POST"))
 
-	g.Handle("POST", "/:serverId/install", middleware.RequiresPermission(pufferpanel.ScopeServersInstall, true), response.NotImplemented)
+	g.Handle("POST", "/:serverId/install", middleware.RequiresPermission(pufferpanel.ScopeServersInstall, true), installServer)
 	g.Handle("OPTIONS", "/:serverId/install", response.CreateOptions("POST"))
+
+	g.Handle("POST", "/:serverId/restart", middleware.RequiresPermission(pufferpanel.ScopeServersStart, true), restartServer)
+	g.Handle("OPTIONS", "/:serverId/restart", response.CreateOptions("POST"))
 
 	g.Handle("GET", "/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesGet, true), response.NotImplemented)
 	g.Handle("PUT", "/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), response.NotImplemented)
@@ -991,14 +994,70 @@ func startServer(c *gin.Context) {
 		return
 	}
 	msg := comms.NewStartServer(server.Identifier)
-	res, err := ns.Send(&server.Node, msg)
+	processRequestToNodeWithNoResponse(c, http.StatusAccepted, ns, server, msg)
+}
+
+func restartServer(c *gin.Context) {
+	server := c.MustGet("server").(*models.Server)
+	ns := services.Node{}
+
+	conn := ns.GetNodeConnection(server.NodeID)
+	if conn == nil {
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+	msg := comms.NewRestartServer(server.Identifier)
+	processRequestToNodeWithNoResponse(c, http.StatusAccepted, ns, server, msg)
+}
+
+func stopServer(c *gin.Context) {
+	server := c.MustGet("server").(*models.Server)
+	ns := services.Node{}
+
+	conn := ns.GetNodeConnection(server.NodeID)
+	if conn == nil {
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+	msg := comms.NewStopServer(server.Identifier)
+	processRequestToNodeWithNoResponse(c, http.StatusAccepted, ns, server, msg)
+}
+
+func killServer(c *gin.Context) {
+	server := c.MustGet("server").(*models.Server)
+	ns := services.Node{}
+
+	conn := ns.GetNodeConnection(server.NodeID)
+	if conn == nil {
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+	msg := comms.NewKillServer(server.Identifier)
+	processRequestToNodeWithNoResponse(c, http.StatusAccepted, ns, server, msg)
+}
+
+func installServer(c *gin.Context) {
+	server := c.MustGet("server").(*models.Server)
+	ns := services.Node{}
+
+	conn := ns.GetNodeConnection(server.NodeID)
+	if conn == nil {
+		c.AbortWithStatus(http.StatusServiceUnavailable)
+		return
+	}
+	msg := comms.NewInstallServer(server.Identifier)
+	processRequestToNodeWithNoResponse(c, http.StatusAccepted, ns, server, msg)
+}
+
+func processRequestToNodeWithNoResponse(c *gin.Context, goodStatus int, ns services.Node, server *models.Server, request interface{}) {
+	res, err := ns.Send(&server.Node, request)
 	if response.HandleError(c, err, http.StatusServiceUnavailable) {
 		return
 	}
 
-	if res.Type() == comms.ConfirmationType() {
-		c.Status(http.StatusNoContent)
-	} else if res.Type() == comms.ErrorType() {
+	if comms.IsSuccess(res) {
+		c.Status(goodStatus)
+	} else if comms.IsError(res) {
 		response.HandleError(c, comms.Cast[comms.Error](res).Error, http.StatusInternalServerError)
 	} else {
 		logging.Error.Printf("Expected confirmation or error from node, got %s", res.Type())
