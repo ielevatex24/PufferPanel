@@ -27,6 +27,38 @@ func migrate(dbConn *gorm.DB) error {
 				}).Error
 			},
 		},
+		{
+			ID: "1665609381",
+			Migrate: func(db *gorm.DB) error {
+				var nodes []*models.Node
+				err := db.Find(&nodes).Error
+				if err != nil {
+					return err
+				}
+
+				var local *models.Node
+				for _, v := range nodes {
+					if v.IsLocal() {
+						local = v
+					}
+				}
+
+				if local == nil {
+					return nil
+				}
+
+				err = db.Table("servers").Where("node_id = ?", local.ID).Update("node_id", 0).Error
+				if err != nil {
+					return err
+				}
+				err = db.Delete(local).Error
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
 	})
 
 	return m.Migrate()

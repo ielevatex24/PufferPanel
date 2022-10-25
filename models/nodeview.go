@@ -43,10 +43,10 @@ func FromNode(n *Node) *NodeView {
 	}
 }
 
-func FromNodes(n *Nodes) *NodesView {
-	result := make(NodesView, len(*n))
+func FromNodes(n []*Node) *NodesView {
+	result := make(NodesView, len(n))
 
-	for k, v := range *n {
+	for k, v := range n {
 		result[k] = FromNode(v)
 	}
 

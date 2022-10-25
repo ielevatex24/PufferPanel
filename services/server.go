@@ -33,14 +33,12 @@ type ServerSearch struct {
 	Page     uint
 }
 
-func (ss *Server) Search(searchCriteria ServerSearch) (records *models.Servers, total int64, err error) {
-	records = &models.Servers{}
-
+func (ss *Server) Search(searchCriteria ServerSearch) (records []*models.Server, total int64, err error) {
 	query := ss.DB
 
 	if searchCriteria.NodeId != 0 {
 		query = query.Where(&models.Server{NodeID: searchCriteria.NodeId})
-	} else if searchCriteria.NodeName != "" {
+	} else if searchCriteria.NodeName != "" && searchCriteria.NodeName != "LocalNode" {
 		query = query.Joins("JOIN nodes n ON servers.node_id = n.id AND n.name = ?", searchCriteria.NodeName)
 	}
 

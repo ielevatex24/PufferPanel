@@ -15,9 +15,11 @@ package services
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/pufferpanel/pufferpanel/v3"
+	"github.com/pufferpanel/pufferpanel/v3/config"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/models"
 	"gorm.io/gorm"
@@ -25,6 +27,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -36,32 +39,76 @@ var wsupgrader = websocket.Upgrader{
 	},
 }
 
+func init() {
+	models.LocalNode.PublicHost = strings.TrimSuffix(strings.TrimPrefix(strings.TrimPrefix(config.MasterUrl.Value(), "http://"), "https://"), "/")
+
+	bindHost := config.WebHost.Value()
+	bindParts := strings.SplitN(bindHost, ":", 2)
+
+	if len(bindParts) == 2 {
+		port, err := strconv.Atoi(bindParts[1])
+		if err == nil {
+			models.LocalNode.PublicPort = uint16(port)
+			models.LocalNode.PrivatePort = uint16(port)
+		}
+	}
+
+	sftpHost := config.SftpHost.Value()
+	sftpParts := strings.SplitN(sftpHost, ":", 2)
+
+	if len(sftpParts) == 2 {
+		port, err := strconv.Atoi(sftpParts[1])
+		if err == nil {
+			models.LocalNode.SFTPPort = uint16(port)
+		}
+	}
+}
+
 type Node struct {
 	DB *gorm.DB
 }
 
-func (ns *Node) GetAll() (*models.Nodes, error) {
-	nodes := &models.Nodes{}
+func (ns *Node) GetAll() ([]*models.Node, error) {
+	var nodes []*models.Node
 
 	res := ns.DB.Find(nodes)
 
-	return nodes, res.Error
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	if config.PanelEnabled.Value() {
+		nodes = append(nodes, models.LocalNode)
+	}
+
+	return nodes, nil
 }
 
 func (ns *Node) Get(id uint) (*models.Node, error) {
 	model := &models.Node{}
 
-	res := ns.DB.First(model, id)
+	if id == models.LocalNode.ID && config.PanelEnabled.Value() {
+		return models.LocalNode, nil
+	}
 
+	res := ns.DB.First(model, id)
 	return model, res.Error
 }
 
 func (ns *Node) Update(model *models.Node) error {
+	if model.ID == models.LocalNode.ID && config.PanelEnabled.Value() {
+		return nil
+	}
+
 	res := ns.DB.Save(model)
 	return res.Error
 }
 
 func (ns *Node) Delete(id uint) error {
+	if id == models.LocalNode.ID && config.PanelEnabled.Value() {
+		return errors.New("cannot delete local node")
+	}
+
 	model := &models.Node{
 		ID: id,
 	}

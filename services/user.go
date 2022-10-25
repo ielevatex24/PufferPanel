@@ -238,9 +238,8 @@ func (us *User) DisableOtp(userId uint, token string) error {
 	return us.Update(user)
 }
 
-func (us *User) Search(usernameFilter, emailFilter string, pageSize, page uint) (*models.Users, int64, error) {
-	users := &models.Users{}
-
+func (us *User) Search(usernameFilter, emailFilter string, pageSize, page uint) ([]*models.User, int64, error) {
+	var users []*models.User
 	query := us.DB
 
 	usernameFilter = strings.Replace(usernameFilter, "*", "%", -1)

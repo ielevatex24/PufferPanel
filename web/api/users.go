@@ -67,7 +67,7 @@ func searchUsers(c *gin.Context) {
 		search.PageLimit = MaxPageSize
 	}
 
-	var results *models.Users
+	var results []*models.User
 	var total int64
 	if results, total, err = us.Search(search.Username, search.Email, search.PageLimit, search.Page); response.HandleError(c, err, http.StatusInternalServerError) {
 		return

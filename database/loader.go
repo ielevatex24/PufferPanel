@@ -162,13 +162,3 @@ func addConnectionSetting(connString, setting string) string {
 
 	return connString
 }
-
-type databaseConnector struct{}
-
-func (*databaseConnector) GetConnection() (*gorm.DB, error) {
-	return GetConnection()
-}
-
-func GetConnector() *databaseConnector {
-	return &databaseConnector{}
-}

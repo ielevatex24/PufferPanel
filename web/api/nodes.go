@@ -57,21 +57,12 @@ func getAllNodes(c *gin.Context) {
 	db := panelmiddleware.GetDatabase(c)
 	ns := &services.Node{DB: db}
 
-	var nodes *models.Nodes
+	var nodes []*models.Node
 	if nodes, err = ns.GetAll(); response.HandleError(c, err, http.StatusInternalServerError) {
 		return
 	}
 
 	data := models.FromNodes(nodes)
-
-	//HACK: For our local node, we actually need to override the public IP
-	for _, d := range *data {
-		if d.PrivateHost == "127.0.0.1" && d.PublicHost == "127.0.0.1" {
-			d.PublicHost = pufferpanel.GetHostname(c.Request.Host)
-			break
-		}
-	}
-
 	c.JSON(http.StatusOK, data)
 }
 
@@ -102,11 +93,6 @@ func getNode(c *gin.Context) {
 	}
 
 	d := models.FromNode(node)
-
-	if d.PrivateHost == "127.0.0.1" && d.PublicHost == "127.0.0.1" {
-		d.PublicHost = strings.SplitN(c.Request.Host, ":", 2)[0]
-	}
-
 	c.JSON(http.StatusOK, d)
 }
 

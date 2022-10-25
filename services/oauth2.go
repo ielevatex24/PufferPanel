@@ -31,18 +31,18 @@ func (o *OAuth2) Get(clientId string) (*models.Client, error) {
 }
 
 func (o *OAuth2) GetForUser(userId uint) ([]*models.Client, error) {
-	clients := &models.Clients{}
+	var clients []*models.Client
 
 	client := &models.Client{
 		UserId: userId,
 	}
 
 	err := o.DB.Where(client).Find(clients).Error
-	return *clients, err
+	return clients, err
 }
 
 func (o *OAuth2) GetForUserAndServer(userId uint, serverId string) ([]*models.Client, error) {
-	clients := &models.Clients{}
+	clients := []*models.Client{}
 
 	client := &models.Client{
 		UserId:   userId,
@@ -50,7 +50,7 @@ func (o *OAuth2) GetForUserAndServer(userId uint, serverId string) ([]*models.Cl
 	}
 
 	err := o.DB.Where(client).Find(clients).Error
-	return *clients, err
+	return clients, err
 }
 
 func (o *OAuth2) Update(client *models.Client) error {
