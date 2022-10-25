@@ -1,5 +1,5 @@
 /*
- Copyright 2018 Padduck, LLC
+ Copyright 2022 (c) PufferPanel
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -43,8 +43,8 @@ func registerServers(g *gin.RouterGroup) {
 	g.Handle("DELETE", "/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersDelete, true), panelmiddleware.HasTransaction, deleteServer)
 	g.Handle("OPTIONS", "/:serverId", response.CreateOptions("PUT", "GET", "POST", "DELETE"))
 
-	g.Handle("PUT", "/:serverId/name", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), response.NotImplemented)
-	g.Handle("PUT", "/:serverId/name/:name", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, renameServer)
+	g.Handle("GET", "/:serverId/name", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), response.NotImplemented)
+	g.Handle("PUT", "/:serverId/name", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), panelmiddleware.HasTransaction, renameServer)
 	g.Handle("OPTIONS", "/:serverId/name/:name", response.CreateOptions("PUT", "GET"))
 
 	g.Handle("GET", "/:serverId/user", middleware.RequiresPermission(pufferpanel.ScopeServersEditUsers, true), getServerUsers)
@@ -485,25 +485,22 @@ func deleteServer(c *gin.Context) {
 		return
 	}
 
-	newHeader, err := c.Cookie("puffer_auth")
-	if response.HandleError(c, err, http.StatusInternalServerError) {
+	msg := comms.NewDeleteServer(server.Identifier)
+
+	res, err := ns.Send(&server.Node, msg)
+	if response.HandleError(c, err, http.StatusServiceUnavailable) {
 		return
 	}
 
-	headers := http.Header{}
-	headers.Add("Authorization", "Bearer "+newHeader)
-
-	/*nodeRes, err := ns.CallNode(node, "DELETE", "/daemon/server/"+server.Identifier, nil, headers)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
-		//node didn't permit it, REVERT!
-		db.Rollback()
+	if comms.IsSuccess(res) {
+	} else if comms.IsError(res) {
+		response.HandleError(c, comms.Cast[comms.Error](res).Error, http.StatusInternalServerError)
+		return
+	} else {
+		logging.Error.Printf("Expected confirmation or error from node, got %s", res.Type())
+		response.HandleError(c, errors.New("unknown response from node"), http.StatusInternalServerError)
 		return
 	}
-
-	if nodeRes.StatusCode != http.StatusNoContent {
-		response.HandleError(c, errors.New("invalid status code response: "+nodeRes.Status), http.StatusInternalServerError)
-		return
-	}*/
 
 	if response.HandleError(c, db.Commit().Error, http.StatusInternalServerError) {
 		return
@@ -792,7 +789,13 @@ func renameServer(c *gin.Context) {
 		return
 	}
 
-	name := c.Param("name")
+	var name string
+
+	err = c.BindJSON(&name)
+	if response.HandleError(c, pufferpanel.ErrUnknownError, http.StatusBadRequest) {
+		return
+	}
+
 	if name == "" {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -822,32 +825,6 @@ func renameServer(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 }
-
-/*// @Summary Gets available OAuth2 scopes for the calling user
-// @Description This allows a caller to see what scopes they have for a server, which can be used to generate a new OAuth2 client or just to know what they can do without making more calls
-// @Accept json
-// @Produce json
-// @Success 200 {object} pufferpanel.Scopes
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Error
-// @Failure 404 {object} response.Error
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server ID"
-// @Router /api/servers/{id}/oauth2 [get]
-func getAvailableOauth2Perms(c *gin.Context) {
-	user := c.MustGet("user").(*models.User)
-	server := c.MustGet("server").(*models.Server)
-
-	db := panelmiddleware.GetDatabase(c)
-	ps := &services.Permission{DB: db}
-
-	perms, err := ps.GetForUserAndServer(user.ID, &server.Identifier)
-	if response.HandleError(c, err, http.StatusInternalServerError) {
-		return
-	}
-
-	c.JSON(http.StatusOK, perms.ToScopes())
-}*/
 
 // @Summary Gets server-level OAuth2 credentials for the logged in user
 // @Accept json
@@ -986,7 +963,7 @@ func getFromDataOrDefault(variables map[string]pufferpanel.Variable, key string,
 
 func startServer(c *gin.Context) {
 	server := c.MustGet("server").(*models.Server)
-	ns := services.Node{}
+	ns := &services.Node{}
 
 	conn := ns.GetNodeConnection(server.NodeID)
 	if conn == nil {
@@ -999,7 +976,7 @@ func startServer(c *gin.Context) {
 
 func restartServer(c *gin.Context) {
 	server := c.MustGet("server").(*models.Server)
-	ns := services.Node{}
+	ns := &services.Node{}
 
 	conn := ns.GetNodeConnection(server.NodeID)
 	if conn == nil {
@@ -1012,7 +989,7 @@ func restartServer(c *gin.Context) {
 
 func stopServer(c *gin.Context) {
 	server := c.MustGet("server").(*models.Server)
-	ns := services.Node{}
+	ns := &services.Node{}
 
 	conn := ns.GetNodeConnection(server.NodeID)
 	if conn == nil {
@@ -1025,31 +1002,21 @@ func stopServer(c *gin.Context) {
 
 func killServer(c *gin.Context) {
 	server := c.MustGet("server").(*models.Server)
-	ns := services.Node{}
+	ns := &services.Node{}
 
-	conn := ns.GetNodeConnection(server.NodeID)
-	if conn == nil {
-		c.AbortWithStatus(http.StatusServiceUnavailable)
-		return
-	}
 	msg := comms.NewKillServer(server.Identifier)
 	processRequestToNodeWithNoResponse(c, http.StatusAccepted, ns, server, msg)
 }
 
 func installServer(c *gin.Context) {
 	server := c.MustGet("server").(*models.Server)
-	ns := services.Node{}
+	ns := &services.Node{}
 
-	conn := ns.GetNodeConnection(server.NodeID)
-	if conn == nil {
-		c.AbortWithStatus(http.StatusServiceUnavailable)
-		return
-	}
 	msg := comms.NewInstallServer(server.Identifier)
 	processRequestToNodeWithNoResponse(c, http.StatusAccepted, ns, server, msg)
 }
 
-func processRequestToNodeWithNoResponse(c *gin.Context, goodStatus int, ns services.Node, server *models.Server, request interface{}) {
+func processRequestToNodeWithNoResponse(c *gin.Context, goodStatus int, ns *services.Node, server *models.Server, request interface{}) {
 	res, err := ns.Send(&server.Node, request)
 	if response.HandleError(c, err, http.StatusServiceUnavailable) {
 		return

@@ -198,6 +198,66 @@ func listen() {
 								return
 							}
 						}
+					case comms.DeleteServerType():
+						{
+							data := comms.Cast[comms.DeleteServer](msg)
+
+							prg, err := programs.Get(data.Server)
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+
+							err = prg.Destroy()
+							if err != nil {
+								_ = Send(comms.NewErrorOnServer(msg.Id(), err, prg.Id()))
+								return
+							}
+							_ = Send(comms.NewConfirmation(msg.Id()))
+						}
+					case comms.CreateServerType():
+						{
+							data := comms.Cast[comms.CreateServer](msg)
+
+							d, err := json.Marshal(data.Server)
+							if err != nil {
+								_ = Send(comms.NewError(msg.Id(), err))
+								return
+							}
+
+							prg := programs.CreateProgram()
+							err = json.Unmarshal(d, prg)
+
+							err = prg.Requirements.Test(prg.Server)
+							if err != nil {
+								_ = Send(comms.NewError(msg.Id(), err))
+								return
+							}
+
+							if err := programs.Create(prg); err != nil {
+								_ = Send(comms.NewError(msg.Id(), err))
+								_ = programs.Delete(prg.Id())
+								return
+							}
+
+							if err := prg.Scheduler.LoadMap(prg.Tasks); err != nil {
+								_ = Send(comms.NewError(msg.Id(), err))
+								_ = programs.Delete(prg.Id())
+								return
+							}
+
+							if err := prg.Scheduler.Start(); err != nil {
+								_ = Send(comms.NewError(msg.Id(), err))
+								_ = programs.Delete(prg.Id())
+								return
+							}
+
+							if err != nil {
+								_ = Send(comms.NewError(msg.Id(), err))
+								return
+							}
+							_ = Send(comms.NewConfirmation(msg.Id()))
+						}
 					}
 				}(d)
 			}

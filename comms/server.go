@@ -1,5 +1,7 @@
 package comms
 
+import "github.com/pufferpanel/pufferpanel/v3"
+
 type StartServer struct {
 	Type   string `json:"type"`
 	Id     string `json:"id"`
@@ -69,6 +71,36 @@ type InstallServer struct {
 func InstallServerType() string { return "server install" }
 func NewInstallServer(server string) InstallServer {
 	return InstallServer{
+		Type:   InstallServerType(),
+		Server: server,
+		Id:     NewId(),
+	}
+}
+
+type DeleteServer struct {
+	Type   string `json:"type"`
+	Id     string `json:"id"`
+	Server string `json:"server"`
+}
+
+func DeleteServerType() string { return "server delete" }
+func NewDeleteServer(server string) DeleteServer {
+	return DeleteServer{
+		Type:   InstallServerType(),
+		Server: server,
+		Id:     NewId(),
+	}
+}
+
+type CreateServer struct {
+	Type   string             `json:"type"`
+	Id     string             `json:"id"`
+	Server pufferpanel.Server `json:"server"`
+}
+
+func CreateServerType() string { return "server create" }
+func NewCreateServer(server pufferpanel.Server) CreateServer {
+	return CreateServer{
 		Type:   InstallServerType(),
 		Server: server,
 		Id:     NewId(),
