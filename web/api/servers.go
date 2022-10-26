@@ -1,9 +1,12 @@
 /*
- Copyright 2018 Padduck, LLC
+ Copyright 2022 (c) PufferPanel
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
+
  	http://www.apache.org/licenses/LICENSE-2.0
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	cors "github.com/itsjamie/gin-cors"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/database"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
@@ -28,9 +32,10 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/services"
 	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func registerServers(g *gin.RouterGroup) {
@@ -59,6 +64,69 @@ func registerServers(g *gin.RouterGroup) {
 
 	g.Handle("DELETE", "/:serverId/oauth2/:clientId", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), deleteOAuth2Client)
 	g.Handle("OPTIONS", "/:serverId/oauth2/:clientId", response.CreateOptions("DELETE"))
+
+	g.GET("/:serverId/data", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), proxyServerRequest)
+	g.POST("/:serverId/data", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/data", response.CreateOptions("GET", "POST"))
+
+	g.GET("/:serverId/tasks", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), proxyServerRequest)
+	g.POST("/:serverId/tasks", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), proxyServerRequest)
+	g.PUT("/:serverId/tasks/:taskId", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), proxyServerRequest)
+	g.DELETE("/:serverId/tasks/:taskId", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/tasks", response.CreateOptions("GET", "POST", "PUT", "DELETE"))
+
+	//g.POST("/:serverId/tasks/:taskId/run", middleware.OAuth2Handler(pufferpanel.ScopeServersEdit, true), RunServerTask)
+	//g.OPTIONS("/:serverId/tasks/:taskId/run", response.CreateOptions("POST"))
+
+	g.POST("/:serverId/reload", middleware.RequiresPermission(pufferpanel.ScopeServersEditAdmin, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/reload", response.CreateOptions("POST"))
+
+	g.POST("/:serverId/start", middleware.RequiresPermission(pufferpanel.ScopeServersStart, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/start", response.CreateOptions("POST"))
+
+	g.POST("/:serverId/stop", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/stop", response.CreateOptions("POST"))
+
+	g.POST("/:serverId/kill", middleware.RequiresPermission(pufferpanel.ScopeServersStop, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/kill", response.CreateOptions("POST"))
+
+	g.POST("/:serverId/install", middleware.RequiresPermission(pufferpanel.ScopeServersInstall, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/install", response.CreateOptions("POST"))
+
+	g.GET("/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesGet, true), proxyServerRequest)
+	g.PUT("/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), proxyServerRequest)
+	g.DELETE("/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), proxyServerRequest)
+	g.POST("/:serverId/file/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/file/*filename", response.CreateOptions("GET", "PUT", "DELETE", "POST"))
+
+	g.GET("/:serverId/console", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), proxyServerRequest)
+	g.POST("/:serverId/console", middleware.RequiresPermission(pufferpanel.ScopeServersConsoleSend, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/console", response.CreateOptions("GET", "POST"))
+
+	g.GET("/:serverId/stats", middleware.RequiresPermission(pufferpanel.ScopeServersStat, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/stats", response.CreateOptions("GET"))
+
+	g.GET("/:serverId/status", middleware.RequiresPermission(pufferpanel.ScopeServersView, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/status", response.CreateOptions("GET"))
+
+	g.POST("/:serverId/archive/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/archive/*filename", response.CreateOptions("POST"))
+
+	g.POST("/:serverId/extract/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), proxyServerRequest)
+	g.OPTIONS("/:serverId/extract/*filename", response.CreateOptions("POST"))
+
+	p := g.Group("/:serverId/socket")
+	{
+		p.GET("", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), cors.Middleware(cors.Config{
+			Origins:     "*",
+			Credentials: true,
+		}), proxyServerRequest)
+		p.Handle("CONNECT", "", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), func(c *gin.Context) {
+			c.Header("Access-Control-Allow-Origin", "*")
+			c.Header("Access-Control-Allow-Credentials", "false")
+		})
+		p.OPTIONS("", response.CreateOptions("GET"))
+	}
 }
 
 // @Summary Value servers
@@ -313,7 +381,7 @@ func createServer(c *gin.Context) {
 	}
 
 	data, _ := json.Marshal(postBody.Server)
-	reader := ioutil.NopCloser(bytes.NewReader(data))
+	reader := io.NopCloser(bytes.NewReader(data))
 
 	//we need to get your new token
 	token, err := c.Cookie("puffer_auth")
@@ -334,7 +402,7 @@ func createServer(c *gin.Context) {
 	}
 
 	if nodeResponse.StatusCode != http.StatusOK {
-		resData, err := ioutil.ReadAll(nodeResponse.Body)
+		resData, err := io.ReadAll(nodeResponse.Body)
 		if err != nil {
 			logging.Error.Printf("Failed to parse response from daemon\n%s", err.Error())
 		}
@@ -929,4 +997,77 @@ func getFromDataOrDefault(variables map[string]pufferpanel.Variable, key string,
 	}
 
 	return val, nil
+}
+
+func proxyServerRequest(c *gin.Context) {
+	db := panelmiddleware.GetDatabase(c)
+	ns := &services.Node{DB: db}
+
+	var node *models.Node
+
+	ss := &services.Server{DB: db}
+
+	serverId := c.Param("serverId")
+	if serverId == "" {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	resolvedPath := "/daemon/server/" + strings.TrimPrefix(c.Request.RequestURI, "/api/servers/")
+
+	s, err := ss.Get(serverId)
+	if err != nil && gorm.ErrRecordNotFound != err && response.HandleError(c, err, http.StatusInternalServerError) {
+		return
+	} else if s == nil || s.Identifier == "" {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	node = &s.Node
+
+	if node.IsLocal() {
+		c.Request.URL.Path = resolvedPath
+		pufferpanel.Engine.HandleContext(c)
+	} else {
+		if c.IsWebsocket() {
+			proxySocketRequest(c, resolvedPath, ns, node)
+		} else {
+			proxyHttpRequest(c, resolvedPath, ns, node)
+		}
+	}
+	c.Abort()
+}
+
+func proxyHttpRequest(c *gin.Context, path string, ns *services.Node, node *models.Node) {
+	callResponse, err := ns.CallNode(node, c.Request.Method, path, c.Request.Body, c.Request.Header)
+
+	if response.HandleError(c, err, http.StatusInternalServerError) {
+		return
+	}
+
+	//Even though apache isn't going to be in place, we can't set certain headers
+	newHeaders := make(map[string]string, 0)
+	for k, v := range callResponse.Header {
+		switch k {
+		case "Transfer-Encoding":
+		case "Content-Type":
+		case "Content-Length":
+			continue
+		default:
+			newHeaders[k] = strings.Join(v, ", ")
+		}
+	}
+
+	c.DataFromReader(callResponse.StatusCode, callResponse.ContentLength, callResponse.Header.Get("Content-Type"), callResponse.Body, newHeaders)
+	c.Abort()
+}
+
+func proxySocketRequest(c *gin.Context, path string, ns *services.Node, node *models.Node) {
+	if node.IsLocal() {
+		//have gin handle the request again, but send it to daemon instead
+		pufferpanel.Engine.HandleContext(c)
+	} else {
+		err := ns.OpenSocket(node, path, c.Writer, c.Request)
+		response.HandleError(c, err, http.StatusInternalServerError)
+	}
+	c.Abort()
 }

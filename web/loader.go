@@ -1,9 +1,12 @@
 /*
- Copyright 2018 Padduck, LLC
+ Copyright 2022 (c) PufferPanel
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
+
  	http://www.apache.org/licenses/LICENSE-2.0
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +27,6 @@ import (
 	"github.com/pufferpanel/pufferpanel/v3/web/auth"
 	"github.com/pufferpanel/pufferpanel/v3/web/daemon"
 	"github.com/pufferpanel/pufferpanel/v3/web/oauth2"
-	"github.com/pufferpanel/pufferpanel/v3/web/proxy"
 	_ "github.com/pufferpanel/pufferpanel/v3/web/swagger"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
@@ -64,8 +66,6 @@ func RegisterRoutes(e *gin.Engine) {
 		e.GET("/manifest.json", webManifest)
 		oauth2.RegisterRoutes(e.Group("/oauth2"))
 		auth.RegisterRoutes(e.Group("/auth"))
-
-		proxy.RegisterRoutes(e.Group("/proxy"))
 
 		css := e.Group("/css")
 		{

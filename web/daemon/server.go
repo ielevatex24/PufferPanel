@@ -1,5 +1,5 @@
 /*
- Copyright 2016 Padduck, LLC
+ Copyright 2022 (c) PufferPanel
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -121,19 +121,6 @@ func RegisterServerRoutes(e *gin.RouterGroup) {
 	l.OPTIONS("", response.CreateOptions("POST"))
 }
 
-// @Summary Starts server
-// @Description Starts the given server
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "Server started"
-// @Success 202 {object} response.Empty "Start has been queued"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param wait query bool false "Wait for the operation to complete"
-// @Router /daemon/server/{id}/start [post]
 func StartServer(c *gin.Context) {
 	item, _ := c.Get("server")
 	server := item.(*programs.Program)
@@ -157,19 +144,6 @@ func StartServer(c *gin.Context) {
 	}
 }
 
-// @Summary Stop server
-// @Description Stops the given server
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "Server stopped"
-// @Success 202 {object} response.Empty "Stop has been queued"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param wait query bool false "Wait for the operation to complete"
-// @Router /daemon/server/{id}/stop [post]
 func StopServer(c *gin.Context) {
 	item, _ := c.Get("server")
 	server := item.(*programs.Program)
@@ -192,17 +166,6 @@ func StopServer(c *gin.Context) {
 	}
 }
 
-// @Summary Kill server
-// @Description Stops the given server forcefully
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "Server killed"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Router /daemon/server/{id}/kill [post]
 func KillServer(c *gin.Context) {
 	item, _ := c.Get("server")
 	server := item.(*programs.Program)
@@ -214,18 +177,6 @@ func KillServer(c *gin.Context) {
 	}
 }
 
-// @Summary Create server
-// @Description Creates the server
-// @Accept json
-// @Produce json
-// @Success 200 {object} pufferpanel.ServerIdResponse "Server created"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param server body pufferpanel.Server true "Server to create"
-// @Router /daemon/server/{id} [put]
 func CreateServer(c *gin.Context) {
 	serverId := c.Param("id")
 	if serverId == "" {
@@ -275,17 +226,6 @@ func CreateServer(c *gin.Context) {
 	c.JSON(200, &pufferpanel.ServerIdResponse{Id: serverId})
 }
 
-// @Summary Deletes server
-// @Description Deletes the given server
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "Server deleted"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Router /daemon/server/{id} [delete]
 func DeleteServer(c *gin.Context) {
 	item, _ := c.Get("server")
 	prg := item.(*programs.Program)
@@ -296,18 +236,6 @@ func DeleteServer(c *gin.Context) {
 	}
 }
 
-// @Summary Installs server
-// @Description installs the given server
-// @Accept json
-// @Produce json
-// @Success 202 {object} response.Empty "Install has been queued"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param wait query bool false "Wait for the operation to complete"
-// @Router /daemon/server/{id}/install [post]
 func InstallServer(c *gin.Context) {
 	item, _ := c.Get("server")
 	prg := item.(*programs.Program)
@@ -329,18 +257,6 @@ func InstallServer(c *gin.Context) {
 	}
 }
 
-// @Summary Edit server data
-// @Description Edits the given server data
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "Server edited"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param data body pufferpanel.ServerData true "Server data"
-// @Router /daemon/server/{id}/data [post]
 func EditServerData(c *gin.Context) {
 	item, _ := c.Get("server")
 	prg := item.(*programs.Program)
@@ -407,17 +323,6 @@ func DeleteServerTask(c *gin.Context) {
 	}
 }
 
-// @Summary Reload server
-// @Description Reloads the server from disk
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "Reloaded server"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Router /daemon/server/{id}/reload [post]
 func ReloadServer(c *gin.Context) {
 	item, _ := c.Get("server")
 	prg := item.(*programs.Program)
@@ -429,17 +334,6 @@ func ReloadServer(c *gin.Context) {
 	}
 }
 
-// @Summary Gets server data
-// @Description Gets the given server data
-// @Accept json
-// @Produce json
-// @Success 200 {object} pufferpanel.ServerData "Data for this server"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Router /daemon/server/{id}/data [get]
 func GetServerData(c *gin.Context) {
 	item, _ := c.Get("server")
 	server := item.(*programs.Program)
@@ -466,34 +360,12 @@ func GetServerTasks(c *gin.Context) {
 	c.JSON(200, &pufferpanel.ServerTasks{Tasks: server.Tasks})
 }
 
-// @Summary Gets server data as admin
-// @Description Gets the given server data from an admin's view
-// @Accept json
-// @Produce json
-// @Success 200 {object} pufferpanel.ServerDataAdmin "Data for this server"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Router /daemon/server/{id} [get]
 func GetServerAdmin(c *gin.Context) {
 	item, _ := c.MustGet("server").(*programs.Program)
 
 	c.JSON(200, &pufferpanel.ServerDataAdmin{Server: &item.Server})
 }
 
-// @Summary Updates a server
-// @Description Updates a server
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Router /daemon/server/{id} [post]
 func EditServerAdmin(c *gin.Context) {
 	item, _ := c.MustGet("server").(*programs.Program)
 	server := &item.Server
@@ -525,20 +397,6 @@ func EditServerAdmin(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// @Summary Value file/list
-// @Description Gets a file or a file list from the server
-// @Accept json
-// @Produce json
-// @Produce octet-stream
-// @Success 200 {object} string "File"
-// @Success 200 {object} messages.FileDesc "File List"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param filename path string true "File name"
-// @Router /daemon/server/{id}/file/{filename} [get]
 func GetFile(c *gin.Context) {
 	item, _ := c.Get("server")
 	server := item.(*programs.Program)
@@ -580,20 +438,6 @@ func GetFile(c *gin.Context) {
 	}
 }
 
-// @Summary Put file/folder
-// @Description Puts a file or folder on the server
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "If file/folder was created"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param filename path string true "File name"
-// @Param folder path bool true "If this is a folder"
-// @Param file formData file false "File to place"
-// @Router /daemon/server/{id}/file/{filename} [put]
 func PutFile(c *gin.Context) {
 	item, _ := c.Get("server")
 	server := item.(*programs.Program)
@@ -638,18 +482,6 @@ func PutFile(c *gin.Context) {
 	}
 }
 
-// @Summary Delete file
-// @Description Deletes a file from the server
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "If file was deleted"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param filename path string true "File name"
-// @Router /daemon/server/{id}/file/{filename} [delete]
 func DeleteFile(c *gin.Context) {
 	item, _ := c.Get("server")
 	server := item.(*programs.Program)
@@ -663,18 +495,6 @@ func DeleteFile(c *gin.Context) {
 	}
 }
 
-// @Summary Run command
-// @Description Runs a command in the server
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "If command was ran"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param commands body string true "Command to run"
-// @Router /daemon/server/{id}/console [post]
 func PostConsole(c *gin.Context) {
 	item, _ := c.Get("server")
 	prg := item.(*programs.Program)
@@ -688,17 +508,6 @@ func PostConsole(c *gin.Context) {
 	}
 }
 
-// @Summary Gets server stats
-// @Description Gets the given server stats
-// @Accept json
-// @Produce json
-// @Success 200 {object} pufferpanel.ServerStats "Stats for this server"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Router /daemon/server/{id}/stats [get]
 func GetStats(c *gin.Context) {
 	item, _ := c.Get("server")
 	svr := item.(*programs.Program)
@@ -710,18 +519,6 @@ func GetStats(c *gin.Context) {
 	}
 }
 
-// @Summary Gets server logs
-// @Description Gets the given server logs since a certain time period
-// @Accept json
-// @Produce json
-// @Success 200 {object} pufferpanel.ServerLogs "Logs for this server"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param time query int false "Only get data from after this UNIX timestamp" default(0)
-// @Router /daemon/server/{id}/console [get]
 func GetLogs(c *gin.Context) {
 	item, _ := c.Get("server")
 	program := item.(*programs.Program)
@@ -746,17 +543,6 @@ func GetLogs(c *gin.Context) {
 	})
 }
 
-// @Summary Gets server status
-// @Description Gets the given server status
-// @Accept json
-// @Produce json
-// @Success 200 {object} pufferpanel.ServerRunning
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Router /daemon/server/{id}/status [get]
 func GetStatus(c *gin.Context) {
 	item, _ := c.Get("server")
 	program := item.(*programs.Program)
@@ -769,17 +555,6 @@ func GetStatus(c *gin.Context) {
 	}
 }
 
-// @Summary Archive file(s)
-// @Description Archives file(s) with the
-// @Accept json
-// @Success 204 {object} response.Empty "If file(s) was archived"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param filename path string true "Destination"
-// @Router /daemon/server/{id}/archive/{filename} [post]
 func Archive(c *gin.Context) {
 	item, _ := c.Get("server")
 	server := item.(*programs.Program)
@@ -801,19 +576,6 @@ func Archive(c *gin.Context) {
 	}
 }
 
-// @Summary Extract files
-// @Description Extracts files from an archive
-// @Accept json
-// @Produce json
-// @Success 204 {object} response.Empty "If file was extracted"
-// @Failure 400 {object} response.Error
-// @Failure 403 {object} response.Empty
-// @Failure 404 {object} response.Empty
-// @Failure 500 {object} response.Error
-// @Param id path string true "Server Identifier"
-// @Param filename path string true "File name"
-// @Param destination path string true "Destination directory (URI Parameter)"
-// @Router /daemon/server/{id}/extract/{filename} [get]
 func Extract(c *gin.Context) {
 	item, _ := c.Get("server")
 	server := item.(*programs.Program)
