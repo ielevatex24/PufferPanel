@@ -66,7 +66,7 @@ func registerServers(g *gin.RouterGroup) {
 	g.Handle("OPTIONS", "/:serverId/oauth2/:clientId", response.CreateOptions("DELETE"))
 
 	g.GET("/:serverId/data", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), proxyServerRequest)
-	g.POST("/:serverId/data", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), proxyServerRequest)
+	g.POST("/:serverId/data", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), editServerData)
 	g.OPTIONS("/:serverId/data", response.CreateOptions("GET", "POST"))
 
 	g.GET("/:serverId/tasks", middleware.RequiresPermission(pufferpanel.ScopeServersEdit, true), proxyServerRequest)
@@ -383,16 +383,7 @@ func createServer(c *gin.Context) {
 	data, _ := json.Marshal(postBody.Server)
 	reader := io.NopCloser(bytes.NewReader(data))
 
-	//we need to get your new token
-	token, err := c.Cookie("puffer_auth")
-	if response.HandleError(c, err, http.StatusInternalServerError) {
-		return
-	}
-
-	headers := http.Header{}
-	headers.Set("Authorization", "Bearer "+token)
-
-	nodeResponse, err := ns.CallNode(node, "PUT", "/daemon/server/"+server.Identifier, reader, headers)
+	nodeResponse, err := ns.CallNode(node, "PUT", "/daemon/server/"+server.Identifier, reader, c.Request.Header)
 	if nodeResponse != nil {
 		defer pufferpanel.Close(nodeResponse.Body)
 	}
@@ -980,19 +971,55 @@ func deleteOAuth2Client(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func getFromData(variables map[string]pufferpanel.Variable, key string) interface{} {
+func editServerData(c *gin.Context) {
+	server := c.MustGet("server").(*models.Server)
+
+	postBody := &models.ServerCreation{}
+	err := c.Bind(postBody)
+	if response.HandleError(c, err, http.StatusBadRequest) {
+		return
+	}
+
+	name := postBody.Name
+	if name != "" {
+		server.Name = name
+	}
+
+	port, err := getFromDataOrDefault(postBody.Variables, "port", uint16(0))
+	if response.HandleError(c, err, http.StatusBadRequest) {
+		return
+	}
+	server.Port = port.(uint16)
+
+	ip, err := getFromDataOrDefault(postBody.Variables, "ip", "0.0.0.0")
+	if response.HandleError(c, err, http.StatusBadRequest) {
+		return
+	}
+	server.IP = ip.(string)
+
+	db := panelmiddleware.GetDatabase(c)
+	ss := &services.Server{DB: db}
+	err = ss.Update(server)
+	if response.HandleError(c, err, http.StatusInternalServerError) {
+		return
+	}
+
+	proxyServerRequest(c)
+}
+
+func getFromData(variables map[string]pufferpanel.Variable, key string) (result interface{}, exists bool) {
 	for k, v := range variables {
 		if k == key {
-			return v.Value
+			return v.Value, true
 		}
 	}
-	return nil
+	return nil, false
 }
 
 func getFromDataOrDefault(variables map[string]pufferpanel.Variable, key string, val interface{}) (interface{}, error) {
-	res := getFromData(variables, key)
+	res, exists := getFromData(variables, key)
 
-	if res != nil {
+	if exists {
 		return pufferpanel.Convert(res, val)
 	}
 
