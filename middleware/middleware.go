@@ -86,7 +86,7 @@ func requiresPermission(c *gin.Context, perm pufferpanel.Scope, needsServer bool
 		}
 
 		//we now have a user and they are allowed to access something, let's confirm they have server access
-		serverId := c.Param("id")
+		serverId := c.Param("serverId")
 		if needsServer && serverId == "" {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
