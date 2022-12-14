@@ -150,6 +150,20 @@ func requiresPermission(c *gin.Context, perm pufferpanel.Scope, needsServer bool
 		}
 
 		if needsServer && serverId != "" {
+			if config.DaemonEnabled.Value() {
+				program, err := programs.Get(serverId)
+				if response.HandleError(c, err, http.StatusInternalServerError) {
+					return
+				}
+
+				if program == nil {
+					c.AbortWithStatus(http.StatusForbidden)
+					return
+				}
+
+				c.Set("program", program)
+			}
+
 			ss := &services.Server{DB: db}
 			server, err := ss.Get(serverId)
 			if response.HandleError(c, err, http.StatusInternalServerError) {

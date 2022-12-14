@@ -122,7 +122,7 @@ func RegisterServerRoutes(e *gin.RouterGroup) {
 }
 
 func StartServer(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 
 	_, wait := c.GetQuery("wait")
@@ -145,7 +145,7 @@ func StartServer(c *gin.Context) {
 }
 
 func StopServer(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 
 	_, wait := c.GetQuery("wait")
@@ -167,7 +167,7 @@ func StopServer(c *gin.Context) {
 }
 
 func KillServer(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 
 	err := server.Kill()
@@ -227,7 +227,7 @@ func CreateServer(c *gin.Context) {
 }
 
 func DeleteServer(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	prg := item.(*programs.Program)
 	err := programs.Delete(prg.Id())
 	if response.HandleError(c, err, http.StatusInternalServerError) {
@@ -237,7 +237,7 @@ func DeleteServer(c *gin.Context) {
 }
 
 func InstallServer(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	prg := item.(*programs.Program)
 
 	_, wait := c.GetQuery("wait")
@@ -258,7 +258,7 @@ func InstallServer(c *gin.Context) {
 }
 
 func EditServerData(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	prg := item.(*programs.Program)
 
 	data := &pufferpanel.ServerData{}
@@ -275,7 +275,7 @@ func EditServerData(c *gin.Context) {
 }
 
 func CreateServerTask(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	prg := item.(*programs.Program)
 
 	var task pufferpanel.Task
@@ -291,7 +291,7 @@ func CreateServerTask(c *gin.Context) {
 }
 
 func EditServerTask(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	prg := item.(*programs.Program)
 
 	var task pufferpanel.Task
@@ -311,7 +311,7 @@ func EditServerTask(c *gin.Context) {
 }
 
 func DeleteServerTask(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	prg := item.(*programs.Program)
 
 	taskName := c.Param("taskName")
@@ -324,7 +324,7 @@ func DeleteServerTask(c *gin.Context) {
 }
 
 func ReloadServer(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	prg := item.(*programs.Program)
 
 	err := programs.Reload(prg.Id())
@@ -335,7 +335,7 @@ func ReloadServer(c *gin.Context) {
 }
 
 func GetServerData(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 
 	data := server.GetData()
@@ -354,7 +354,7 @@ func GetServerData(c *gin.Context) {
 }
 
 func GetServerTasks(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 
 	c.JSON(200, &pufferpanel.ServerTasks{Tasks: server.Tasks})
@@ -398,7 +398,7 @@ func EditServerAdmin(c *gin.Context) {
 }
 
 func GetFile(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 
 	targetPath := c.Param("filename")
@@ -439,7 +439,7 @@ func GetFile(c *gin.Context) {
 }
 
 func PutFile(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 
 	targetPath := c.Param("filename")
@@ -483,7 +483,7 @@ func PutFile(c *gin.Context) {
 }
 
 func DeleteFile(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 
 	targetPath := c.Param("filename")
@@ -496,7 +496,7 @@ func DeleteFile(c *gin.Context) {
 }
 
 func PostConsole(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	prg := item.(*programs.Program)
 
 	d, _ := ioutil.ReadAll(c.Request.Body)
@@ -509,7 +509,7 @@ func PostConsole(c *gin.Context) {
 }
 
 func GetStats(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	svr := item.(*programs.Program)
 
 	results, err := svr.GetEnvironment().GetStats()
@@ -520,7 +520,7 @@ func GetStats(c *gin.Context) {
 }
 
 func GetLogs(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	program := item.(*programs.Program)
 
 	time := c.DefaultQuery("time", "0")
@@ -544,7 +544,7 @@ func GetLogs(c *gin.Context) {
 }
 
 func GetStatus(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	program := item.(*programs.Program)
 
 	running, err := program.IsRunning()
@@ -556,7 +556,7 @@ func GetStatus(c *gin.Context) {
 }
 
 func Archive(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 	var files []string
 
@@ -577,7 +577,7 @@ func Archive(c *gin.Context) {
 }
 
 func Extract(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	server := item.(*programs.Program)
 
 	targetPath := c.Param("filename")
@@ -591,7 +591,7 @@ func Extract(c *gin.Context) {
 }
 
 func OpenSocket(c *gin.Context) {
-	item, _ := c.Get("server")
+	item, _ := c.Get("program")
 	program := item.(*programs.Program)
 
 	conn, err := wsupgrader.Upgrade(c.Writer, c.Request, nil)
