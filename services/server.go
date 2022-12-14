@@ -60,7 +60,7 @@ func (ss *Server) Search(searchCriteria ServerSearch) (records []*models.Server,
 		return nil, 0, err
 	}
 
-	err = query.Preload("Node").Offset(int((searchCriteria.Page - 1) * searchCriteria.PageSize)).Limit(int(searchCriteria.PageSize)).Order("servers.name").Find(records).Error
+	err = query.Preload("Node").Offset(int((searchCriteria.Page - 1) * searchCriteria.PageSize)).Limit(int(searchCriteria.PageSize)).Order("servers.name").Find(&records).Error
 
 	return
 }

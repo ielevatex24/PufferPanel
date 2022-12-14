@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-var noLogin = []string{"/auth/", "/error/", "/daemon/", "/api/config"}
+var noLogin = []string{"/auth/", "/error/", "/api/config"}
 var assetFiles = []string{".js", ".css", ".img", ".ico", ".png", ".gif"}
 var overrideRequireLogin = []string{"/auth/reauth", "/auth/logout"}
 
