@@ -27,12 +27,12 @@ export class ServerApi {
   }
 
   async getStatus(id) {
-    const res = await this._api.get(`/proxy/daemon/server/${id}/status`)
+    const res = await this._api.get(`/api/servers/${id}/status`)
     return res.data.running
   }
 
   async action(id, action, wait = false) {
-    await this._api.post(`/proxy/daemon/server/${id}/${action}?wait=${wait}`)
+    await this._api.post(`/api/servers/${id}/${action}?wait=${wait}`)
     return true
   }
 
@@ -53,12 +53,12 @@ export class ServerApi {
   }
 
   async sendCommand(id, command) {
-    await this._api.post(`/proxy/daemon/server/${id}/console`, command)
+    await this._api.post(`/api/servers/${id}/console`, command)
     return true
   }
 
   async getConsole(id, time = 0) {
-    const res = await this._api.get(`/proxy/daemon/server/${id}/console?time=${time}`)
+    const res = await this._api.get(`/api/servers/${id}/console?time=${time}`)
     return res.data
   }
 
@@ -68,27 +68,27 @@ export class ServerApi {
   }
 
   async getDefinition(id) {
-    const res = await this._api.get(`/proxy/daemon/server/${id}`)
+    const res = await this._api.get(`/api/servers/${id}`)
     return res.data
   }
 
   async updateDefinition(id, data) {
-    await this._api.post(`/proxy/daemon/server/${id}`, data)
+    await this._api.post(`/api/servers/${id}`, data)
     return true
   }
 
   async reloadDefinition(id) {
-    await this._api.post(`/proxy/daemon/server/${id}/reload`)
+    await this._api.post(`/api/servers/${id}/reload`)
     return true
   }
 
   async getData(id) {
-    const res = await this._api.get(`/proxy/daemon/server/${id}/data`)
+    const res = await this._api.get(`/api/servers/${id}/data`)
     return res.data.data
   }
 
   async updateData(id, data) {
-    await this._api.post(`/proxy/daemon/server/${id}/data`, { data })
+    await this._api.post(`/api/servers/${id}/data`, { data })
     return true
   }
 
@@ -111,7 +111,7 @@ export class ServerApi {
     if (path.indexOf('/') === 0) path = path.substring(1)
     path = encodeURIComponent(path)
     path = path.replace(/%2F/g, '/')
-    return `/proxy/daemon/server/${id}/file/${path}`
+    return `/api/servers/${id}/file/${path}`
   }
 
   async getFile(id, path = '', raw = false) {
@@ -184,13 +184,13 @@ export class ServerApi {
     if (destination.startsWith('/')) destination = destination.substring(1)
     if (!Array.isArray(files)) files = [files]
     files.map(file => file.startsWith('/') ? file.substring(1) : file)
-    await this._api.post(`/proxy/daemon/server/${id}/archive/${destination}`, files)
+    await this._api.post(`/api/servers/${id}/archive/${destination}`, files)
     return true
   }
 
   async extractFile(id, path, destination) {
     if (path.startsWith('/')) path = path.substring(1)
-    await this._api.get(`/proxy/daemon/server/${id}/extract/${path}`, { destination })
+    await this._api.get(`/api/servers/${id}/extract/${path}`, { destination })
     return true
   }
 
@@ -277,7 +277,7 @@ class Server {
     if (host.indexOf("https://") === 0) host = host.substr(8)
 
     const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss'
-    this._socket = new WebSocket(`${protocol}://${window.location.host}/proxy/daemon/socket/${this.id}`)
+    this._socket = new WebSocket(`${protocol}://${window.location.host}/api/servers/${this.id}/socket`)
     this.readyState = this._socket.readyState
 
     this._socket.addEventListener('open', e => this._onOpen(e))

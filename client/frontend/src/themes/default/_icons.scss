@@ -29,6 +29,10 @@
   @include icon;
 }
 
+@mixin icon-spin-base {
+  animation: icon-spin 2s infinite linear;
+}
+
 @mixin icon-spin {
   &::before {
     animation: icon-spin 2s infinite linear;

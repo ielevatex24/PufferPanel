@@ -71,7 +71,7 @@ type Node struct {
 func (ns *Node) GetAll() ([]*models.Node, error) {
 	var nodes []*models.Node
 
-	res := ns.DB.Find(nodes)
+	res := ns.DB.Find(&nodes)
 
 	if res.Error != nil {
 		return nil, res.Error

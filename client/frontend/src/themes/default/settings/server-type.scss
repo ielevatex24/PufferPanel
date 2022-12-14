@@ -30,7 +30,7 @@
   &[data-online="loading"]::before {
     @include status-indicator;
     @include icon-name-base(loading);
-    @include icon-spin;
+    @include icon-spin-base;
   }
 }
 
@@ -93,7 +93,7 @@ $serverTypes: ('7days', 'ark', 'csgo', 'css', 'dontstarvetogether', 'factorio', 
   &[data-online="loading"]::before {
     @include status-indicator;
     @include icon-name-base(loading);
-    @include icon-spin;
+    @include icon-spin-base;
   }
 }
 

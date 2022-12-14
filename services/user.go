@@ -260,7 +260,7 @@ func (us *User) Search(usernameFilter, emailFilter string, pageSize, page uint) 
 		return nil, 0, err
 	}
 
-	res := query.Offset(int((page - 1) * pageSize)).Limit(int(pageSize)).Find(users)
+	res := query.Offset(int((page - 1) * pageSize)).Limit(int(pageSize)).Find(&users)
 
 	return users, count, res.Error
 }
