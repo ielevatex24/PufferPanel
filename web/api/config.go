@@ -35,17 +35,17 @@ func panelConfig(c *gin.Context) {
 }
 
 type EditableConfig struct {
-	Themes              ThemeConfig
-	Branding            BrandingConfig
-	RegistrationEnabled bool
+	Themes              ThemeConfig    `json:"themes"`
+	Branding            BrandingConfig `json:"branding"`
+	RegistrationEnabled bool           `json:"registrationEnabled"`
 }
 
 type ThemeConfig struct {
-	Active    string
-	Settings  string
-	Available []string
+	Active    string   `json:"active"`
+	Settings  string   `json:"settings"`
+	Available []string `json:"available"`
 }
 
 type BrandingConfig struct {
-	Name string
+	Name string `json:"name"`
 }
