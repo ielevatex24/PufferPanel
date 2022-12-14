@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/itsjamie/gin-cors"
+	cors "github.com/itsjamie/gin-cors"
 	"github.com/pufferpanel/pufferpanel/v3"
 	"github.com/pufferpanel/pufferpanel/v3/logging"
 	"github.com/pufferpanel/pufferpanel/v3/middleware"
@@ -102,19 +102,17 @@ func RegisterServerRoutes(e *gin.RouterGroup) {
 		l.POST("/:serverId/archive/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), Archive)
 		l.GET("/:serverId/extract/*filename", middleware.RequiresPermission(pufferpanel.ScopeServersFilesPut, true), Extract)
 
-	}
-
-	p := e.Group("/socket")
-	{
-		p.GET("/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), cors.Middleware(cors.Config{
+		l.GET("/:serverId/socket", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), cors.Middleware(cors.Config{
 			Origins:     "*",
 			Credentials: true,
 		}), OpenSocket)
-		p.Handle("CONNECT", "/:serverId", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), func(c *gin.Context) {
+
+		l.Handle("CONNECT", "/:serverId/socket", middleware.RequiresPermission(pufferpanel.ScopeServersConsole, true), func(c *gin.Context) {
 			c.Header("Access-Control-Allow-Origin", "*")
 			c.Header("Access-Control-Allow-Credentials", "false")
 		})
-		p.OPTIONS("/:serverId", response.CreateOptions("GET"))
+		l.OPTIONS("/:serverId/socket", response.CreateOptions("GET", "CONNECT"))
+
 	}
 
 	l.POST("", middleware.RequiresPermission(pufferpanel.ScopeServersCreate, false), CreateServer)
