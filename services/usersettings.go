@@ -33,7 +33,7 @@ func (uss *UserSettings) GetAllForUser(userId uint) (models.UserSettingsView, er
 		return nil, err
 	}
 
-	err = query.Find(records).Error
+	err = query.Find(&records).Error
 	if err != nil {
 		return nil, err
 	}
