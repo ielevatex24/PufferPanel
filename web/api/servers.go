@@ -1091,6 +1091,7 @@ func proxyHttpRequest(c *gin.Context, path string, ns *services.Node, node *mode
 func proxySocketRequest(c *gin.Context, path string, ns *services.Node, node *models.Node) {
 	if node.IsLocal() {
 		//have gin handle the request again, but send it to daemon instead
+		c.Request.URL.Path = path
 		pufferpanel.Engine.HandleContext(c)
 	} else {
 		err := ns.OpenSocket(node, path, c.Writer, c.Request)

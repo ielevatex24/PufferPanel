@@ -38,7 +38,7 @@ func migrate(dbConn *gorm.DB) error {
 
 				var local *models.Node
 				for _, v := range nodes {
-					if v.IsLocal() {
+					if v.Name == "LocalNode" {
 						local = v
 					}
 				}
