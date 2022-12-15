@@ -1,7 +1,11 @@
 .dark {
+  --success-bg: #4caf5040;
   --success: #4caf50;
-  --warning-bg: #855800;
+  --info-bg: #3b8db840;
+  --info: #3b8db8;
+  --warning-bg: #fbac0040;
   --warning: #fbac00;
+  --error-bg: #fe424240;
   --error: #fe4242;
   --backdrop: #292929;
   --background: #333;
@@ -15,9 +19,13 @@
 }
 
 .light {
+  --success-bg: #4caf5040;
   --success: #4caf50;
-  --warning-bg: #fccf66;
+  --info-bg: #21a1de40;
+  --info: #21a1de;
+  --warning-bg: #fb8c0040;
   --warning: #fb8c00;
+  --error-bg: #dc313140;
   --error: #dc3131;
   --backdrop: #eee;
   --background: #fff;

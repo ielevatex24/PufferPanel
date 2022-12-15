@@ -5,33 +5,41 @@ export class TemplateApi {
     this._api = api
   }
 
-  async list() {
+  async listRepos() {
     const res = await this._api.get('/api/templates')
     return res.data
   }
 
-  async get(name) {
-    const res = await this._api.get(`/api/templates/${name}`)
+  async listRepoTemplates(repo) {
+    const res = await this._api.get(`/api/templates/${repo}`)
+    return res.data
+  }
+
+  async listAllTemplates() {
+    const res = {}
+    const repos = await this.listRepos()
+    // treating `local` specially to have it come first in iterations over the
+    // result objects properties
+    if (repos.filter(r => r.name === 'local').length > 0)
+      res['local'] = await this.listRepoTemplates('local')
+    await Promise.all(repos.filter(r => r.name !== 'local').map(async repo => {
+      res[repo.name] = await this.listRepoTemplates(repo.name)
+    }))
+    return res
+  }
+
+  async get(repo, name) {
+    const res = await this._api.get(`/api/templates/${repo}/${name}`)
     return res.data
   }
 
   async save(name, template) {
-    await this._api.put(`/api/templates/${name}`, template)
+    await this._api.put(`/api/templates/local/${name}`, template)
     return true
   }
 
   async delete(name) {
-    await this._api.delete(`/api/templates/${name}`)
-    return true
-  }
-
-  async listImportable() {
-    const res = await this._api.post('/api/templates/import')
-    return res.data
-  }
-
-  async import(name) {
-    await this._api.post(`/api/templates/import/${name}`)
+    await this._api.delete(`/api/templates/local/${name}`)
     return true
   }
 }

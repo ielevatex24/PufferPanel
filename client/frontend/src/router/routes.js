@@ -109,7 +109,7 @@ export default (api) => [
     name: 'TemplateCreate'
   },
   {
-    path: '/templates/view/:id',
+    path: '/templates/view/:repo/:id',
     component: () => import('@/views/TemplateView.vue'),
     name: 'TemplateView'
   },

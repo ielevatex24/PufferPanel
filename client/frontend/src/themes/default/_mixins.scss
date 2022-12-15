@@ -58,6 +58,18 @@ $breakpoints: (
 
 // Lists
 @mixin baselist {
+  .list-header {
+    margin: 0;
+    padding: 0.75em 0.5em;
+    display: flex;
+    align-items: center;
+    transition: background 0.1s ease-in-out;
+
+    h1, h2, h3, h4, h5, h6 {
+      margin-bottom: 0;
+    }
+  }
+
   .list-item {
     margin: 0;
     padding: 0.75em 0.5em;
@@ -95,6 +107,11 @@ html[dir="rtl"] .list-item .list-item-icon {
 
 @mixin gridlist {
   @include row;
+
+  .list-header {
+    @include cols(12);
+    margin-bottom: 0;
+  }
 
   .list-item {
     @include cols(12);

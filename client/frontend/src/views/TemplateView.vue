@@ -31,12 +31,13 @@ const valid = ref({
 })
 
 onMounted(async () => {
-  const res = await api.template.get(route.params.id)
+  const res = await api.template.get(route.params.repo, route.params.id)
   delete res.readme
   template.value = JSON.stringify(res, undefined, 4)
 })
 
 async function deleteTemplate() {
+  if (!canDelete()) return
   events.emit(
     'confirm',
     t('templates.ConfirmDelete', { name: JSON.parse(template.value).display }),
@@ -56,6 +57,10 @@ async function deleteTemplate() {
   )
 }
 
+function canDelete() {
+  return route.params.repo === 'local'
+}
+
 async function save() {
   if (!canSave()) return
   await api.template.save(route.params.id, template.value)
@@ -63,6 +68,7 @@ async function save() {
 }
 
 function canSave() {
+  if (route.params.repo !== 'local') return false
   return Object.values(valid.value).filter(e => e === false).length === 0
 }
 </script>
@@ -71,6 +77,7 @@ function canSave() {
   <div class="templateview">
     <loader v-if="!template" />
     <div v-else>
+      <div v-if="route.params.repo !== 'local'" class="alert info" v-text="t('templates.EditLocalOnly')" />
       <tabs anchors>
         <tab id="general" :title="t('templates.General')" icon="general" hotkey="t g">
           <general v-model="template" @valid="valid.general = $event" />
@@ -94,8 +101,8 @@ function canSave() {
           <ace id="template-json" v-model="template" class="template-json-editor" mode="json" />
         </tab>
       </tabs>
-      <div class="actions">
-        <btn color="error" @click="deleteTemplate()"><icon name="remove" />{{ t('templates.Delete') }}</btn>
+      <div class="actions" v-if="route.params.repo === 'local'">
+        <btn color="error" :disabled="!canDelete()" @click="deleteTemplate()"><icon name="remove" />{{ t('templates.Delete') }}</btn>
         <btn color="primary" :disabled="!canSave()" @click="save()"><icon name="save" />{{ t('templates.Save') }}</btn>
       </div>
     </div>

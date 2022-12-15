@@ -10,33 +10,20 @@ const { t } = useI18n()
 const api = inject('api')
 const toast = inject('toast')
 const emit = defineEmits(['selected'])
-const available = ref([])
-const importable = ref([])
+const templatesByRepo = ref([])
 const showing = ref(false)
 const currentTemplate = ref({})
 
 async function load() {
-  const known = await api.template.list()
-  available.value = known
-  const knownRemote = await api.template.listImportable()
-  importable.value = knownRemote.filter(i => !known.find(t => t.name === i))
+  templatesByRepo.value = await api.template.listAllTemplates()
 }
 
 onMounted(async () => {
   load()
 })
 
-async function importAndShow(template) {
-  if (await api.template.import(template)) {
-    load()
-    show(template)
-  } else {
-    toast.error(t('errors.ImportFailed'))
-  }
-}
-
-async function show(t) {
-  currentTemplate.value = await api.template.get(t)
+async function show(repo, template) {
+  currentTemplate.value = await api.template.get(repo, template)
   showing.value = true
 }
 
@@ -49,13 +36,11 @@ function choice(confirm) {
 <template>
   <div class="select-template">
     <h2 v-text="t('servers.SelectTemplate')" />
-    <div v-for="template in available" :key="template.name" class="template" @click="show(template.name)">
-      <span v-text="template.display" />
-    </div>
-    <h3 v-text="t('templates.Import')" />
-    <div class="warning" v-text="t('templates.import.CommunityWarning')" />
-    <div v-for="template in importable" :key="template" class="template importable" @click="importAndShow(template)">
-      <span v-text="template" />
+    <div v-for="(templates, repo) in templatesByRepo" :key="repo" class="list">
+      <h3 class="list-header" v-text="repo" />
+      <div v-for="template in templates" :key="template.name" class="list-item template" @click="show(repo, template.name)">
+        <span v-text="template.display" />
+      </div>
     </div>
 
     <overlay v-model="showing" :title="currentTemplate.display" closable>

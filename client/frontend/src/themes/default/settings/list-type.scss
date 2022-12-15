@@ -1,4 +1,14 @@
 .list-type-grid {
+  .main .list {
+    @include breakpoint(md) {
+      @include gridlist;
+    }
+
+    @include breakpoint-only(xs) {
+      @include baselist;
+    }
+  }
+
   @each $t in ('server', 'node', 'user', 'template') {
     .#{$t}list {
       @include card;
@@ -64,6 +74,10 @@
 }
 
 .list-type-list {
+  .main .list {
+    @include baselist;
+  }
+
   @each $t in ('server', 'node', 'user', 'template') {
     .#{$t}list {
       @include card;

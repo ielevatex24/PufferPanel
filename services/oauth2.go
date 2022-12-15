@@ -37,7 +37,7 @@ func (o *OAuth2) GetForUser(userId uint) ([]*models.Client, error) {
 		UserId: userId,
 	}
 
-	err := o.DB.Where(client).Find(clients).Error
+	err := o.DB.Where(client).Find(&clients).Error
 	return clients, err
 }
 
@@ -49,7 +49,7 @@ func (o *OAuth2) GetForUserAndServer(userId uint, serverId string) ([]*models.Cl
 		ServerId: serverId,
 	}
 
-	err := o.DB.Where(client).Find(clients).Error
+	err := o.DB.Where(client).Find(&clients).Error
 	return clients, err
 }
 

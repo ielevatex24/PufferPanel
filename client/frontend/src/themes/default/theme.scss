@@ -474,17 +474,17 @@ html[dir="rtl"] .menu.open {
 
 
 
-.warning {
+.alert {
   @include cols(12);
   margin-bottom: 1em;
   padding: 0.75em;
-  background-color: var(--warning-bg);
   border-radius: var(--border-radius);
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
   &::after {
     height: 5px;
-    background-color: var(--warning);
     content: '';
     display: block;
     position: absolute;
@@ -493,6 +493,56 @@ html[dir="rtl"] .menu.open {
     bottom: 0;
     right: 0;
   }
+  @include icon;
+  &::before {
+    font-size: 32px;
+    font-weight: bold;
+    margin-right: 0.3em;
+  }
+}
+
+.alert.success {
+  background-color: var(--success-bg);
+  &::before {
+    color: var(--success);
+  }
+  &::after {
+    background-color: var(--success);
+  }
+  @include icon-name(check-circle-outline);
+}
+
+.alert.info {
+  background-color: var(--info-bg);
+  &::before {
+    color: var(--info);
+  }
+  &::after {
+    background-color: var(--info);
+  }
+  @include icon-name(information-outline);
+}
+
+.alert.warning {
+  background-color: var(--warning-bg);
+  &::before {
+    color: var(--warning);
+  }
+  &::after {
+    background-color: var(--warning);
+  }
+  @include icon-name(alert-outline);
+}
+
+.alert.error {
+  background-color: var(--error-bg);
+  &::before {
+    color: var(--error);
+  }
+  &::after {
+    background-color: var(--error);
+  }
+  @include icon-name(alert-outline);
 }
 
 
@@ -781,6 +831,11 @@ html[dir="rtl"] .settings .panel .master-url .icon {
 
     h2, h3 {
       @include cols(12);
+    }
+
+    .list {
+      @include cols(12);
+      width: 100%;
     }
 
     .template {
