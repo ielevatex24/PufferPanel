@@ -134,12 +134,13 @@ func requiresPermission(c *gin.Context, perm pufferpanel.Scope, needsServer bool
 		}
 
 		allowed := false
+		scopes := make([]pufferpanel.Scope, 0)
 		for _, p := range perms {
 			for _, v := range p.ToScopes() {
+				scopes = append(scopes, v)
 				//allow if you have the scope, or if you're a server admin
-				if v == perm || v == pufferpanel.ScopeServersAdmin {
+				if !allowed && (v == perm || v == pufferpanel.ScopeServersAdmin) {
 					allowed = true
-					break
 				}
 			}
 		}
@@ -179,6 +180,7 @@ func requiresPermission(c *gin.Context, perm pufferpanel.Scope, needsServer bool
 			c.Set("server", server)
 		}
 
+		c.Set("scopes", scopes)
 		actuallyFinished = true
 	} else {
 		//we need to ask the panel what permissions this entity has...
