@@ -19,14 +19,14 @@ import (
 )
 
 type ServerView struct {
-	Identifier string           `json:"id,omitempty"`
-	Name       string           `json:"name,omitempty"`
-	NodeId     uint             `json:"nodeId,omitempty"`
-	Node       *NodeView        `json:"node,omitempty"`
-	Data       interface{}      `json:"data,omitempty"`
-	Users      []ServerUserView `json:"users,omitempty"`
-	IP         string           `json:"ip,omitempty"`
-	Port       uint16           `json:"port,omitempty"`
+	Identifier string           `json:"id"`
+	Name       string           `json:"name"`
+	NodeId     uint             `json:"nodeId"`
+	Node       *NodeView        `json:"node"`
+	Data       interface{}      `json:"data"`
+	Users      []ServerUserView `json:"users"`
+	IP         string           `json:"ip"`
+	Port       uint16           `json:"port"`
 	Type       string           `json:"type"`
 }
 

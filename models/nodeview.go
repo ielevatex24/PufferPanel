@@ -20,13 +20,13 @@ import (
 )
 
 type NodeView struct {
-	Id          uint   `json:"id,omitempty"`
-	Name        string `json:"name,omitempty"`
-	PublicHost  string `json:"publicHost,omitempty"`
-	PrivateHost string `json:"privateHost,omitempty"`
-	PublicPort  uint16 `json:"publicPort,omitempty"`
-	PrivatePort uint16 `json:"privatePort,omitempty"`
-	SFTPPort    uint16 `json:"sftpPort,omitempty"`
+	Id          uint   `json:"id"`
+	Name        string `json:"name"`
+	PublicHost  string `json:"publicHost"`
+	PrivateHost string `json:"privateHost"`
+	PublicPort  uint16 `json:"publicPort"`
+	PrivatePort uint16 `json:"privatePort"`
+	SFTPPort    uint16 `json:"sftpPort"`
 }
 
 type NodesView []*NodeView
