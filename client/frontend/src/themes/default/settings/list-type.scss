@@ -26,8 +26,13 @@
           @include gridlist;
           .#{$t} {
             @include card;
-            @include link;
             margin-top: 0;
+          }
+          .#{$t}:not(.disabled) {
+            @include link;
+          }
+          .#{$t}.disabled {
+            background-color: var(--backdrop);
           }
         }
 

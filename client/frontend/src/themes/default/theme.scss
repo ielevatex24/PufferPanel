@@ -178,6 +178,17 @@ hr {
   height: calc(100vh - 56px - 16em);
 }
 
+
+.main .operators, .main .variables {
+  .list {
+    gap: 0.25em;
+    grid-gap: 0.25em;
+    .list-item {
+      @include cols(12);
+    }
+  }
+}
+
 .templatecreate, .templateview, .serverview #admin .server-definition {
   .actions {
     @include row;

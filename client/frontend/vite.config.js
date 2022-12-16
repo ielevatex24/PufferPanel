@@ -7,6 +7,9 @@ import vueI18n from '@intlify/vite-plugin-vue-i18n'
 import fs from 'fs'
 
 export default defineConfig({
+  build: {
+    chunkSizeWarningLimit: 550
+  },
   resolve: {
     alias: [
       {find: "@", replacement: path.resolve(__dirname, 'src')}

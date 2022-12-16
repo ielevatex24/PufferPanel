@@ -39,7 +39,7 @@ export default {
     Icon
   },
   props: {
-    modelValue: { type: Object, reuired: true }
+    modelValue: { type: Object, required: true }
   },
   emits: ['update:modelValue', 'save', 'close'],
   setup(props, { emit }) {
@@ -70,6 +70,6 @@ function emitUpdate(event) {
       <source :src="modelValue.url" />
       <div class="warning unsupported" v-text="t('errors.AudioUnsupported')" />
     </audio>
-    <ace v-else id="file-editor" :modelValue="modelValue.content" class="file-editor" :file="modelValue.name" theme="monokai" @update:modelValue="emitUpdate" />
+    <ace v-else id="file-editor" :model-value="modelValue.content" class="file-editor" :file="modelValue.name" theme="monokai" @update:modelValue="emitUpdate" />
   </div>
 </template>

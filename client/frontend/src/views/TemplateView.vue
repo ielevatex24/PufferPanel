@@ -101,7 +101,7 @@ function canSave() {
           <ace id="template-json" v-model="template" class="template-json-editor" mode="json" />
         </tab>
       </tabs>
-      <div class="actions" v-if="route.params.repo === 'local'">
+      <div v-if="route.params.repo === 'local'" class="actions">
         <btn color="error" :disabled="!canDelete()" @click="deleteTemplate()"><icon name="remove" />{{ t('templates.Delete') }}</btn>
         <btn color="primary" :disabled="!canSave()" @click="save()"><icon name="save" />{{ t('templates.Save') }}</btn>
       </div>

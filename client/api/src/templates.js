@@ -42,4 +42,19 @@ export class TemplateApi {
     await this._api.delete(`/api/templates/local/${name}`)
     return true
   }
+
+  async getRepo(repo) {
+    const res = await this._api.get(`/api/templates/${repo}`)
+    return res.data
+  }
+
+  async saveRepo(repo, config) {
+    await this._api.put(`/api/templates/${repo}`, config)
+    return true
+  }
+
+  async deleteRepo(repo) {
+    await this._api.delete(`/api/templates/${repo}`)
+    return true
+  }
 }
