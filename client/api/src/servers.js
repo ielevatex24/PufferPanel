@@ -77,11 +77,6 @@ export class ServerApi {
     return true
   }
 
-  async reloadDefinition(id) {
-    await this._api.post(`/api/servers/${id}/reload`)
-    return true
-  }
-
   async getData(id) {
     const res = await this._api.get(`/api/servers/${id}/data`)
     return res.data.data
@@ -431,10 +426,6 @@ class Server {
 
   async updateDefinition(data) {
     return await this._api.server.updateDefinition(this.id, data)
-  }
-
-  async reloadDefinition() {
-    return await this._api.server.reloadDefinition(this.id)
   }
 
   async getData() {

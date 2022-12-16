@@ -1,4 +1,12 @@
 @font-face {
+  font-family: 'Quicksand';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/Quicksand.woff2);
+}
+
+@font-face {
   font-family: 'Comfortaa';
   font-style: normal;
   font-weight: 400;
@@ -23,7 +31,8 @@
 }
 
 :root {
-  --standard-font: 'Comfortaa', sans-serif;
+  --standard-font: 'Quicksand', sans-serif;
+  --headline-font: 'Comfortaa', sans-serif;
   --monospace-font: 'Ubuntu Mono', monospace;
   --title-font: 'Ubuntu Bold';
   --apex-font: var(--standard-font);

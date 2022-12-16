@@ -49,11 +49,6 @@ function saveDefinition() {
   def.value = edited
 }
 
-function reload() {
-  props.server.reloadDefinition()
-  toast.success(t('servers.Reloaded'))
-}
-
 function deleteServer() {
   events.emit(
     'confirm',
@@ -106,7 +101,6 @@ onMounted(async () => {
     <toggle v-if="isAdmin" v-model="def.run.autorestart" :label="t('servers.Autorestart')" @click.prevent="toggleSetting('autorestart')" />
     <toggle v-if="isAdmin" v-model="def.run.autorecover" :label="t('servers.Autorecover')" @click.prevent="toggleSetting('autorecover')" />
     <btn v-if="isAdmin" v-hotkey="'a e'" variant="text" @click="editDefinition()"><icon name="edit" />{{ t('servers.EditDefinition') }}</btn>
-    <btn v-if="isAdmin" v-hotkey="'a r'" variant="text" @click="reload()"><icon name="reload" />{{ t('servers.Reload') }}</btn>
     <btn v-if="isAdmin" color="error" @click="deleteServer()"><icon name="remove" />{{ t('servers.Delete') }}</btn>
 
     <overlay v-model="editorOpen" class="server-definition">
