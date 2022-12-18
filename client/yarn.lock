@@ -28,11 +28,6 @@
   resolved "https://registry.yarnpkg.com/@babel/parser/-/parser-7.15.8.tgz#7bacdcbe71bdc3ff936d510c15dcea7cf0b99016"
   integrity sha512-BRYa3wcQnjS/nqI8Ac94pYYpJfojHVvVXJ97+IDCImX4Jc8W8Xv1+47enbruk+q1etOpsQNwnfFcNGw+gtPGxA==
 
-"@babel/standalone@^7.15.7":
-  version "7.15.8"
-  resolved "https://registry.yarnpkg.com/@babel/standalone/-/standalone-7.15.8.tgz#3cb40b81892a702968a3e0bba2bdd1115f034876"
-  integrity sha512-EF2uQLeuwflnPRGetWH2Z400ITOSK7YbkXIKxY91EWSiOJ8xsbupT3sx3sFRwVyQgjsHSILFDzLcSo/rGspLhQ==
-
 "@csstools/normalize.css@^12.0.0":
   version "12.0.0"
   resolved "https://registry.yarnpkg.com/@csstools/normalize.css/-/normalize.css-12.0.0.tgz#a9583a75c3f150667771f30b60d9f059473e62c4"
@@ -383,17 +378,6 @@
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.0.tgz#f544a148d3ab35801c1f633a7441fd87c2e484bf"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
-
-"@vitejs/plugin-legacy@^1.6.2":
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/@vitejs/plugin-legacy/-/plugin-legacy-1.6.2.tgz#638bfe74715bdba33a68b3de555f615e1b246cdb"
-  integrity sha512-p5Bv/827WUpVN2m95ZYXzmjE3AblFE4CHasVoZ7dIwOPlyNcpg70SehEi5AWqyC0E7C1rHD8Nju9rWoV9uBLiw==
-  dependencies:
-    "@babel/standalone" "^7.15.7"
-    core-js "^3.18.1"
-    magic-string "^0.25.7"
-    regenerator-runtime "^0.13.9"
-    systemjs "^6.10.3"
 
 "@vitejs/plugin-vue@^1.9.3":
   version "1.9.3"
@@ -907,11 +891,6 @@ console-control-strings@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/console-control-strings/-/console-control-strings-1.1.0.tgz#3d7cf4464db6446ea644bf4b39507f9851008e8e"
   integrity sha1-PXz0Rk22RG6mRL9LOVB/mFEAjo4=
-
-core-js@^3.18.1:
-  version "3.18.3"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.18.3.tgz#86a0bba2d8ec3df860fefcc07a8d119779f01509"
-  integrity sha512-tReEhtMReZaPFVw7dajMx0vlsz3oOb8ajgPoHVYGxr8ErnZ6PcYEvvmjGmXlfpnxpkYSdOQttjB+MvVbCGfvLw==
 
 cross-spawn@^7.0.2:
   version "7.0.3"
@@ -2569,11 +2548,6 @@ readdirp@~3.6.0:
   dependencies:
     picomatch "^2.2.1"
 
-regenerator-runtime@^0.13.9:
-  version "0.13.9"
-  resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.13.9.tgz#8925742a98ffd90814988d7566ad30ca3b263b52"
-  integrity sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==
-
 regexpp@^3.1.0, regexpp@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/regexpp/-/regexpp-3.2.0.tgz#0425a2768d8f23bad70ca4b90461fa2f1213e1b2"
@@ -2886,11 +2860,6 @@ svg.select.js@^3.0.1:
   integrity sha512-h5IS/hKkuVCbKSieR9uQCj9w+zLHoPh+ce19bBYyqF53g6mnPB8sAtIbe1s9dh2S2fCmYX2xel1Ln3PJBbK4kw==
   dependencies:
     svg.js "^2.6.5"
-
-systemjs@^6.10.3:
-  version "6.10.3"
-  resolved "https://registry.yarnpkg.com/systemjs/-/systemjs-6.10.3.tgz#7e783fccb58232f1d9eb05c7e1a661268945cade"
-  integrity sha512-mXwfLJdaADqWg1J5+Z0bGQEdcXSe+ePPTfzffMB29aVls5cXveRl0vneSV/19t3SfuUBsAraLP8W/g5u9cmYXA==
 
 table@^6.0.9:
   version "6.7.2"

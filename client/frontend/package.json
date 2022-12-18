@@ -31,7 +31,6 @@
   },
   "devDependencies": {
     "@intlify/vite-plugin-vue-i18n": "^3.1.0",
-    "@vitejs/plugin-legacy": "^1.6.2",
     "@vitejs/plugin-vue": "^1.9.3",
     "eslint": "^8.0.0",
     "eslint-config-prettier": "^8.3.0",
