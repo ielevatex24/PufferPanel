@@ -58,6 +58,10 @@ func AuthMiddleware(c *gin.Context) {
 
 	cookie, err := c.Cookie("puffer_auth")
 	if err == http.ErrNoCookie || cookie == "" {
+		// reset err so we don't trip the final error
+		// check despite successful auth from header
+		err = nil
+
 		//determine if it's an asset, otherwise, we can redirect if it's a GET
 		//dev only requirement?
 		/*if c.Request.Method == "GET" && strings.Count(c.Request.URL.Path, "/") == 1 {

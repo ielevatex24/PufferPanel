@@ -16,6 +16,12 @@ export class AuthApi {
     return true
   }
 
+  async oauth(clientId, clientSecret) {
+    const res = await this._api.post('/oauth2/token', `grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`)
+    this._sessionStore.setToken(res.data.access_token)
+    return true
+  }
+
   async login(email, password) {
     const res = await this._api.post('/auth/login', { email, password })
     if (res.data.otpNeeded) return 'otp'

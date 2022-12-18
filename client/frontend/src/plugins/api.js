@@ -1,4 +1,4 @@
-import ApiClient, { ServerCookieSessionStore } from 'pufferpanel'
+import { ApiClient, ServerCookieSessionStore } from 'pufferpanel'
 
 export const apiClient = new ApiClient(
   location.origin,

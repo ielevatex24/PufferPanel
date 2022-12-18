@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "axios": "^0.23.0",
-    "js-cookie": "^3.0.1",
-    "nanoevents": "^6.0.2"
+    "js-cookie": "^3.0.1"
   }
 }

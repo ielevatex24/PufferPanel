@@ -8,8 +8,9 @@ module.exports = defineConfig({
       name: 'PufferPanel',
       fileName: (format) => `pufferpanel.${format}.js`
     },
+    minify: false,
     rollupOptions: {
-      external: ['axios', 'nanoevents'],
+      external: ['axios'],
       output: {
         globals: {
           axios: 'axios'

@@ -1,5 +1,3 @@
-import { createNanoEvents } from 'nanoevents'
-
 export class ServerApi {
   _api = null
 
@@ -229,7 +227,22 @@ class Server {
   readyState = WebSocket.CONNECTING
 
   constructor(api, serverData) {
-    this._emitter = createNanoEvents()
+    // inlined https://github.com/ai/nanoevents because just depending on it breaks nodejs somehow...
+    this._emitter = {
+      events: {},
+      emit(event, ...args) {
+        let callbacks = this.events[event] || []
+        for (let i = 0, length = callbacks.length; i < length; i++) {
+          callbacks[i](...args)
+        }
+      },
+      on(event, cb) {
+        this.events[event]?.push(cb) || (this.events[event] = [cb])
+        return () => {
+          this.events[event] = this.events[event]?.filter(i => cb !== i)
+        }
+      }
+    }
 
     this.id = serverData.server.id
     this.ip = serverData.server.id
@@ -265,14 +278,15 @@ class Server {
 
   _openSocket() {
     let host = this._api._host
-    if (!host) {
+    if (!host && typeof window !== 'undefined') {
       host = window.location.host
     }
-    if (host.indexOf("http://") === 0) host = host.substr(7)
-    if (host.indexOf("https://") === 0) host = host.substr(8)
+    if (!host) throw new Error('cannot determine host to connect to')
+    const protocol = host.indexOf('https://') === 0 ? 'wss' : 'ws'
+    if (host.indexOf('http://') === 0) host = host.substr(7)
+    if (host.indexOf('https://') === 0) host = host.substr(8)
 
-    const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss'
-    this._socket = new WebSocket(`${protocol}://${window.location.host}/api/servers/${this.id}/socket`)
+    this._socket = new WebSocket(`${protocol}://${host}/api/servers/${this.id}/socket`)
     this.readyState = this._socket.readyState
 
     this._socket.addEventListener('open', e => this._onOpen(e))

@@ -3,7 +3,6 @@ import Cookies from 'js-cookie'
 export class InMemorySessionStore {
   _token = null
   _scopes = null
-  _timeout = null
 
   setToken(token) {
     this._token = token
@@ -34,7 +33,7 @@ export class InMemorySessionStore {
 const defaultCookieOptions = {
   domain: undefined,
   path: '/',
-  secure: window ? window.location.protocol === 'https' : false,
+  secure: typeof window !== 'undefined' ? window.location.protocol === 'https' : false,
   sameSite: 'Strict'
 }
 
@@ -84,7 +83,7 @@ export class ServerCookieSessionStore {
   }
 
   setToken(token) {
-    console.error('It seems you want the ClientCookieSessionStore, not the ServerCookieSessionStore')
+    throw new Error('It seems you want the ClientCookieSessionStore, not the ServerCookieSessionStore')
   }
 
   setScopes(scopes) {
