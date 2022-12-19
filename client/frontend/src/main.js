@@ -12,6 +12,10 @@ import validators from '@/plugins/validators'
 import makeRouter from '@/router'
 import App from "@/App.vue"
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' })
+}
+
 async function mountApp(config) {
   createApp(App)
     .use(api)
