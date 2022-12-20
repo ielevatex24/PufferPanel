@@ -11,14 +11,14 @@ const width = ref('100%')
 const cpu = []
 const mem = []
 
-const data = [
+const series = [
   {
     name: t('servers.CPU'),
-    data: cpu
+    data: []
   },
   {
     name: t('servers.Memory'),
-    data: mem
+    data: []
   }
 ]
 
@@ -107,14 +107,28 @@ const options = {
 
 function addData(d) {
   const ts = new Date().getTime()
-  apex.value.chart.appendData([
-    {
-      data: [[ts, d.cpu]]
-    },
-    {
-      data: [[ts, d.memory]]
+  let animate = true
+
+  cpu.push([ts, d.cpu])
+  if (cpu.length > 600) {
+    animate = false
+    while (cpu.length > 60) {
+      cpu.shift()
     }
-  ])
+  }
+
+  mem.push([ts, d.memory])
+  if (mem.length > 600) {
+    animate = false
+    while (mem.length > 60) {
+      mem.shift()
+    }
+  }
+
+  apex.value.chart.updateSeries([
+    { data: cpu },
+    { data: mem }
+  ], animate)
 }
 
 let task = null
@@ -157,6 +171,6 @@ onUnmounted(() => {
 <template>
   <div ref="wrapper" class="statistics">
     <h2 v-text="t('servers.Statistics')" />
-    <chart ref="apex" dir="ltr" :width="width" height="500" :options="options" :series="data" />
+    <chart ref="apex" dir="ltr" :width="width" height="500" :options="options" :series="series" />
   </div>
 </template>
