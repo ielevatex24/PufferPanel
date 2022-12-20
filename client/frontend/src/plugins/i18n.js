@@ -3,6 +3,7 @@ import { createI18n } from 'vue-i18n'
 
 let i18n = null
 const ltr = ref(true)
+const fallback = 'en_US'
 
 const getLocale = () => {
   const stored = localStorage.getItem('locale')
@@ -13,7 +14,7 @@ const getLocale = () => {
     localeList.filter(test(userLang))[0] ||
     localeList.filter(test(userLang.split('_')[0]))[0]
   if (fromBrowser) return fromBrowser
-  return 'en_US'
+  return fallback
 }
 
 export default async () => {
@@ -21,9 +22,9 @@ export default async () => {
   i18n = createI18n({
     legacy: false,
     locale,
-    fallbackLocale: 'en_US'
+    fallbackLocale: fallback
   })
-  await updateLocale(locale)
+  await updateLocale(locale, false)
 
   const i18nInstall = i18n.install
   i18n.install = (app) => {
@@ -35,11 +36,16 @@ export default async () => {
 
 const rtl = ['ar_SA', 'he_IL']
 const files = ['common', 'env', 'errors', 'files', 'hotkeys', 'nodes', 'oauth', 'operators', 'scopes', 'servers', 'settings', 'templates', 'users']
-export async function updateLocale(locale) {
+export async function updateLocale(locale, save = true) {
+  if (save) localStorage.setItem('locale', locale)
   const messages = {}
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
-    messages[file] = (await import(`../lang/${locale}/${file}.json`)).default
+    try {
+      messages[file] = (await import(`../lang/${locale}/${file}.json`)).default
+    } catch (e) {
+      messages[file] = (await import(`../lang/${fallback}/${file}.json`)).default
+    }
   }
 
   i18n.global.setLocaleMessage(locale, messages)
