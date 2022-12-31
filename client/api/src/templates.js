@@ -33,6 +33,16 @@ export class TemplateApi {
     return res.data
   }
 
+  async exists(repo, name) {
+    try {
+      const res = await this._api.get(`/api/templates/${repo}/${name}`, undefined, undefined, {unhandledErrors: [404]})
+      if (!res.status || res.status >= 400) throw new Error('template doesn\'t exist, behave yourself js...')
+      return true
+    } catch (e) {
+      return false
+    }
+  }
+
   async save(name, template) {
     await this._api.put(`/api/templates/local/${name}`, template)
     return true

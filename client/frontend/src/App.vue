@@ -185,6 +185,7 @@ function handleConfirm(title, ok, cancel) {
   if (!ok.icon) ok.icon = 'apply'
   if (!ok.color) ok.color = 'primary'
 
+  if (!cancel) cancel = {}
   if (!cancel.action) cancel.action = () => {}
   if (!cancel.text) cancel.text = t('common.Cancel')
   if (!cancel.icon) cancel.icon = 'close'

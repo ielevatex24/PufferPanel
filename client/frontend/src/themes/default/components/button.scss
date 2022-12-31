@@ -21,13 +21,13 @@
   }
 }
 
-#toasts .toast .button.toast {
+#toasts .toast .button.toast, .alert .button {
   width: unset;
   margin: 0 0 0 1em;
   padding: 0 1em;
 }
 
-html[dir="rtl"] #toasts .toast .button.toast {
+html[dir="rtl"] #toasts .toast .button.toast, html[dir="rtl"] .alert .button {
   margin: 0 1em 0 0;
 }
 

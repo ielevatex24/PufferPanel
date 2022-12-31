@@ -68,9 +68,11 @@ onUpdated(() => {
   try {
     const u = JSON.parse(props.modelValue)
     // reserializing to avoid issues due to formatting
-    if (JSON.stringify(template.value) !== JSON.stringify(u))
+    if (JSON.stringify(template.value) !== JSON.stringify(u)) {
       template.value = u
       stopType.value = stopTypeFromValue(u.run)
+      validate()
+    }
   } catch {
     // expected failure caused by json editor producing invalid json during modification
   }

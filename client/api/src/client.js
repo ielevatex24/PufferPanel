@@ -70,7 +70,7 @@ export class ApiClient {
     try {
       return await this._axios.get(this._host + url, { params, ...options, headers: this._enhanceHeaders(headers) })
     } catch (e) {
-      this._handleError(e)
+      if (!Array.isArray(options.unhandledErrors) || options.unhandledErrors.indexOf(e.response.status) === -1) this._handleError(e)
     }
   }
 
@@ -78,7 +78,7 @@ export class ApiClient {
     try {
       return await this._axios.post(this._host + url, data, { params, ...options, headers: this._enhanceHeaders(headers) })
     } catch (e) {
-      this._handleError(e)
+      if (!Array.isArray(options.unhandledErrors) || options.unhandledErrors.indexOf(e.response.status) === -1) this._handleError(e)
     }
   }
 
@@ -86,7 +86,7 @@ export class ApiClient {
     try {
       return await this._axios.put(this._host + url, data, { params, ...options, headers: this._enhanceHeaders(headers) })
     } catch (e) {
-      this._handleError(e)
+      if (!Array.isArray(options.unhandledErrors) || options.unhandledErrors.indexOf(e.response.status) === -1) this._handleError(e)
     }
   }
 
@@ -94,7 +94,7 @@ export class ApiClient {
     try {
       return await this._axios.delete(this._host + url, { params, ...options, headers: this._enhanceHeaders(headers) })
     } catch (e) {
-      this._handleError(e)
+      if (!Array.isArray(options.unhandledErrors) || options.unhandledErrors.indexOf(e.response.status) === -1) this._handleError(e)
     }
   }
 

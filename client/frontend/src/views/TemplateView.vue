@@ -1,6 +1,6 @@
 <script setup>
 import { ref, inject, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 import General from '@/components/template/General.vue'
@@ -24,16 +24,43 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
+let unmodified = null
 const template = ref(null)
 const valid = ref({
   general: true,
   run: true
 })
 
+onBeforeRouteLeave((to, from) => {
+  if (unmodified === template.value) {
+    return true
+  } else {
+    return new Promise((resolve, reject) => {
+      events.emit(
+        'confirm',
+        t('common.ConfirmLeave'),
+        {
+          text: t('common.Discard'),
+          icon: 'remove',
+          color: 'error',
+          action: () => { resolve(true) }
+        },
+        {
+          color: 'primary',
+          action: () => { resolve(false) }
+        }
+      )
+    })
+  }
+})
+
 onMounted(async () => {
   const res = await api.template.get(route.params.repo, route.params.id)
   delete res.readme
   template.value = JSON.stringify(res, undefined, 4)
+  setTimeout(() => {
+    unmodified = template.value
+  }, 50)
 })
 
 async function deleteTemplate() {
@@ -71,13 +98,23 @@ function canSave() {
   if (route.params.repo !== 'local') return false
   return Object.values(valid.value).filter(e => e === false).length === 0
 }
+
+function createLocalCopy() {
+  const t = JSON.parse(template.value)
+  delete t.name
+  sessionStorage.setItem('copiedTemplate', JSON.stringify(t))
+  router.push({ name: 'TemplateCreate', query: { 'copy': true } })
+}
 </script>
 
 <template>
   <div class="templateview">
     <loader v-if="!template" />
     <div v-else>
-      <div v-if="route.params.repo !== 'local'" class="alert info" v-text="t('templates.EditLocalOnly')" />
+      <div v-if="route.params.repo !== 'local'" class="alert info">
+        <span v-text="t('templates.EditLocalOnly')" />
+        <btn color="primary" @click="createLocalCopy()"><icon name="copy" />{{ t('templates.CreateLocalCopy') }}</btn>
+      </div>
       <tabs anchors>
         <tab id="general" :title="t('templates.General')" icon="general" hotkey="t g">
           <general v-model="template" @valid="valid.general = $event" />

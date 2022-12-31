@@ -514,6 +514,9 @@ html[dir="rtl"] .menu.open {
     font-weight: bold;
     margin-right: 0.3em;
   }
+  span {
+    flex-grow: 1;
+  }
 }
 
 .alert.success {
