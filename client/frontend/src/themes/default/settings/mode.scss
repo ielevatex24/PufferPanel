@@ -1,4 +1,4 @@
-.dark {
+@mixin dark {
   --success-bg: #4caf5040;
   --success: #4caf50;
   --info-bg: #3b8db840;
@@ -18,7 +18,7 @@
   --apex-text-color: var(--text);
 }
 
-.light {
+@mixin light {
   --success-bg: #4caf5040;
   --success: #4caf50;
   --info-bg: #21a1de40;
@@ -36,4 +36,18 @@
   --ace-theme: github;
   --apex-background-color: var(--background);
   --apex-text-color: var(--text);
+}
+
+.mode-dark {
+  @include dark;
+}
+
+.mode-light, .mode-auto {
+  @include light;
+}
+
+.mode-auto {
+  @media (prefers-color-scheme: dark) {
+    @include dark;
+  }
 }

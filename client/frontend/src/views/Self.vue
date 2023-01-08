@@ -135,7 +135,7 @@ function updateThemeSetting(name, newSetting) {
     <div class="loader"><loader /></div>
   </div>
   <div v-else class="self">
-    <tabs anchor>
+    <tabs anchors>
       <tab id="preferences" :title="t('users.Preferences')" icon="settings" hotkey="t s">
         <div class="preferences">
           <h1 v-text="t('users.Preferences')" />

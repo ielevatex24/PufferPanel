@@ -7,12 +7,16 @@
       "tkey": "common.theme.Mode",
       "options": [
         {
-          "value": "light",
-          "tkey": "common.theme.mode.Light",
+          "value": "mode-auto",
+          "tkey": "common.theme.mode.Auto",
           "default": true
         },
         {
-          "value": "dark",
+          "value": "mode-light",
+          "tkey": "common.theme.mode.Light"
+        },
+        {
+          "value": "mode-dark",
           "tkey": "common.theme.mode.Dark"
         }
       ]

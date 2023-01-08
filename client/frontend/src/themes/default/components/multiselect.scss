@@ -163,6 +163,7 @@
   box-sizing: border-box;
   width: 100%;
   appearance: none;
+  background-color: rgba(0, 0, 0, 0);
 
   &::-webkit-search-decoration,
   &::-webkit-search-cancel-button,
@@ -170,6 +171,10 @@
   &::-webkit-search-results-decoration {
     -webkit-appearance:none;
   }
+}
+
+.multiselect-tags-search:focus {
+  outline: none;
 }
 
 .multiselect-caret {
