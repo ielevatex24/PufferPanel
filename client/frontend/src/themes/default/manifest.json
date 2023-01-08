@@ -38,7 +38,8 @@
           "var": "--primary-hover"
         },
         {
-          "type": "complementary",
+          "type": "hueShift",
+          "hueShift": 180,
           "var": "--primary-complement"
         }
       ],

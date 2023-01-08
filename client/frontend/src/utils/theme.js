@@ -53,9 +53,10 @@ function deriveOpacity(base, config) {
   return `${config.var}: ${rgba2hex(rgba)};`
 }
 
-function deriveComplementary(base, config) {
+function deriveHueShift(base, config) {
+  const hs = Number(config.hueShift) || 0
   const hsl = rgb2hsl(hex2rgba(base))
-  hsl[0] = (((hsl[0] * 360) + 180) % 360) / 360
+  hsl[0] = (((hsl[0] * 360) + hs) % 360) / 360
   return `${config.var}: ${rgba2hex(hsl2rgb(hsl))};`
 }
 
@@ -67,8 +68,8 @@ export function deriveColor(base, config) {
       return deriveContrast(base, config)
     case 'opacity':
       return deriveOpacity(base, config)
-    case 'complementary':
-      return deriveComplementary(base, config)
+    case 'hueShift':
+      return deriveHueShift(base, config)
     default:
       console.error(`unknown color derivation: ${config.type}`)
   }
