@@ -3,10 +3,10 @@ import { ref, inject, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/ui/Icon.vue'
 import TextField from '@/components/ui/TextField.vue'
-import AnsiUp from 'ansi_up'
 
-const ansiup = new AnsiUp()
-ansiup.ansi_to_html('\u001b[m')
+import ConsoleWorker from '@/utils/consoleWorker.js?worker&inline'
+const worker = new ConsoleWorker()
+let lastElem = null
 
 const { t } = useI18n()
 const config = inject('config')
@@ -15,7 +15,6 @@ const name = config.branding.name
 const command = ref('')
 const console = ref(null)
 let lastMessageTime = 0
-let lastIncompleteLine = null
 
 const props = defineProps({
   server: { type: Object, required: true }
@@ -24,7 +23,15 @@ const props = defineProps({
 let unbindEvent = null
 let task = null
 onMounted(() => {
-  unbindEvent = props.server.on('console', onConsole)
+  unbindEvent = props.server.on('console', e => {
+    if ('epoch' in event) {
+      lastMessageTime = event.epoch
+    } else {
+      lastMessageTime = Math.floor(Date.now() / 1000)
+    }
+    worker.postMessage({ ...e, name })
+  })
+  worker.addEventListener("message", onWorkerMessage)
 
   task = props.server.startTask(() => {
     if (props.server.needsPolling()) {
@@ -41,72 +48,24 @@ onUnmounted(() => {
   clearConsole()
 })
 
-function handleCarriageReturn(line) {
-  if (line.indexOf('\r') !== -1) {
-    const parts = line.split('\r')
-    let result = parts.shift()
-    parts.map(part => {
-      result = part + result.substring(part.length)
-    })
-    return result
-  }
-
-  return line
-}
-
-function markDaemon(line) {
-  if (line.trim().indexOf('[DAEMON]') === 0) {
-    return `<span class="daemon-marker" data-name="${name}"></span>` + line.substring(8)
-  }
-
-  return line
-}
-
-function handleLine(line) {
-  // escaping after carriage return to not mess with char counts
-  return markDaemon(handleCarriageReturn(line))
-}
-
-function onConsole(event) {
-  if ('epoch' in event) {
-    lastMessageTime = event.epoch
-  } else {
-    lastMessageTime = Math.floor(Date.now() / 1000)
-  }
-
-  let newLines = (Array.isArray(event.logs) ? event.logs.join('') : event.logs).replaceAll('\r\n', '\n')
-  const endOnNewline = newLines.endsWith('\n')
-  newLines = newLines.split('\n')
-
-  if (endOnNewline) {
-    // if ending on a newline, do not render an empty last line
-    newLines.pop()
-  }
-
-  let last = null
-  newLines.map(line => {
-    line = ansiup.ansi_to_html(line)
-    if (lastIncompleteLine) {
-      line = lastIncompleteLine.line + line
-    }
-
-    if (lastIncompleteLine) {
-      lastIncompleteLine.el.innerHTML = handleLine(line)
-      last = { el: lastIncompleteLine.el, line }
+function onWorkerMessage(e) {
+  const newElems = []
+  e.data.map(update => {
+    if (update.op === 'update' && lastElem) {
+      lastElem.innerHTML = update.content
     } else {
       const el = document.createElement('div')
-      el.innerHTML = handleLine(line)
-      console.value.appendChild(el)
-      last = { el, line }
+      el.innerHTML = update.content
+      newElems.push(el)
+      lastElem = el
     }
   })
-
-  if (!endOnNewline) {
-    // not ending on a newline means last line is incomplete
-    // therefore remember it to complete later
-    lastIncompleteLine = last
+  if (newElems + console.value.children.length > 1200) {
+    let elems = console.value.children.concat(newElems)
+    elems = elems.slice(elems.length - 1000, elems.length)
+    console.value.replaceChildren(elems)
   } else {
-    lastIncompleteLine = null
+    console.value.append(...newElems)
   }
 }
 
